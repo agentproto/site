@@ -38,6 +38,11 @@ const mdxComponents = {
   AipRegistry,
   AipResources,
   DriverFamily,
+  // Backward-compat alias: pre-rename specs reference <ProviderFamily />
+  // (the component was called that before the AIP-30 supertype was
+  // renamed Provider → Driver). Keeps existing .mdx content rendering
+  // until the upstream agentproto specs catch up.
+  ProviderFamily: DriverFamily,
 } as Record<string, unknown>
 
 /**
