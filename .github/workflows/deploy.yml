@@ -19,8 +19,17 @@ concurrency:
   cancel-in-progress: false
 
 env:
+  # Cloud Run runtime project (where the service runs). Each product
+  # gets its own project for IAM isolation.
   GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
   GCP_REGION: ${{ vars.GCP_REGION }}
+  # Artifact Registry coords. Convention: ONE shared AR in
+  # `agentik-studio`, all product images push there. Cross-project
+  # pull was wired by `agentik infra new-product` so this product's
+  # Cloud Run can pull from the shared AR. When GCP_REGISTRY_PROJECT
+  # is unset we fall back to GCP_PROJECT_ID for backward compat (per-
+  # project AR pattern).
+  GCP_REGISTRY_PROJECT: ${{ vars.GCP_REGISTRY_PROJECT || vars.GCP_PROJECT_ID }}
   ARTIFACT_REPO: ${{ vars.ARTIFACT_REPO }}
   SERVICE_NAME: agentproto-site
 
@@ -58,7 +67,11 @@ jobs:
         id: tag
         run: |
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.ARTIFACT_REPO }}/${{ env.SERVICE_NAME }}"
+          # Image path uses the REGISTRY project (shared AR) — not the
+          # runtime project. Cloud Run on the runtime project pulls
+          # cross-project thanks to the IAM binding wired by
+          # `agentik infra new-product`.
+          IMAGE="${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_REGISTRY_PROJECT }}/${{ env.ARTIFACT_REPO }}/${{ env.SERVICE_NAME }}"
           echo "short_sha=$SHORT_SHA" >> "$GITHUB_OUTPUT"
           echo "image=$IMAGE:$SHORT_SHA" >> "$GITHUB_OUTPUT"
           echo "image_latest=$IMAGE:latest" >> "$GITHUB_OUTPUT"
