@@ -94,6 +94,12 @@ jobs:
         id: deploy
         uses: google-github-actions/deploy-cloudrun@v2
         with:
+          # `project_id` overrides the auto-detected gcloud project,
+          # which would otherwise be the deployer SA's home project
+          # (`agentik-studio` for the shared deployer). The Cloud Run
+          # service runs in the per-product runtime project, NOT in
+          # the registry project.
+          project_id: ${{ env.GCP_PROJECT_ID }}
           service: ${{ env.SERVICE_NAME }}
           region: ${{ env.GCP_REGION }}
           image: ${{ steps.tag.outputs.image }}
