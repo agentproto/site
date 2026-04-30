@@ -1,0 +1,38 @@
+# Dependencies
+node_modules
+
+# Next.js
+.next
+out
+next-env.d.ts
+
+# Sync caches — content is pulled at build/dev time from the
+# agentproto/agentproto repo (sibling on disk, or cloned to .cache/).
+# The synced content under content/docs/agentproto/ is never tracked;
+# the source of truth is the public spec repo.
+.cache
+content/docs/agentproto
+
+# Fumadocs generated
+.source
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Editor
+.DS_Store
+.idea
+.vscode
+!.vscode/settings.json
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# TypeScript
+*.tsbuildinfo

@@ -1,0 +1,42 @@
+{
+  "name": "@agentproto/site",
+  "version": "0.1.0-alpha.0",
+  "private": true,
+  "description": "agentproto.sh — public docs site for agentproto open standards. Renders AIP markdown specifications + reference TypeScript runtime docs. Content source: github.com/agentproto/agentproto (cloned at build time, sibling-resolved in dev).",
+  "homepage": "https://agentproto.sh",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agentproto/site"
+  },
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "predev": "node scripts/sync-content.mjs",
+    "dev": "next dev --turbopack",
+    "prebuild": "node scripts/sync-content.mjs",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf .next content/docs/agentproto"
+  },
+  "dependencies": {
+    "fumadocs-core": "^16.7.11",
+    "fumadocs-mdx": "^14.2.11",
+    "fumadocs-ui": "^16.7.11",
+    "next": "^16.2.3",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "@types/react": "^19.2.10",
+    "@types/react-dom": "^19.2.3",
+    "tailwindcss": "^4.1.14",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  }
+}

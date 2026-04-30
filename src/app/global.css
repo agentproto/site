@@ -1,0 +1,155 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+
+/* ── AIP-specific component styling ─────────────────────────────── */
+
+.aip-resources,
+.aip-registry,
+.provider-family {
+  margin: 2rem 0;
+}
+
+.resources-intro,
+.registry-intro,
+.family-intro {
+  color: var(--color-fd-muted-foreground);
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+}
+
+.resources-tree-link {
+  color: var(--color-fd-primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+.resources-tree-link:hover { text-decoration: underline; }
+
+.resources-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--color-fd-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.resources-row + .resources-row { border-top: 1px solid var(--color-fd-border); }
+
+.resources-link {
+  display: grid;
+  grid-template-columns: 24px max-content 1fr;
+  gap: 12px;
+  align-items: baseline;
+  padding: 10px 14px;
+  text-decoration: none;
+  color: var(--color-fd-foreground);
+  background: var(--color-fd-card);
+  transition: background 120ms;
+}
+.resources-link:hover { background: var(--color-fd-accent); }
+
+.resources-icon { font-size: 16px; line-height: 1; }
+.resources-name {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.resources-path {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  color: var(--color-fd-muted-foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.registry-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.registry-table th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-fd-muted-foreground);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-fd-border);
+}
+.registry-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-fd-border);
+}
+.registry-num a,
+.registry-title a {
+  color: var(--color-fd-foreground);
+  text-decoration: none;
+  font-weight: 500;
+}
+.registry-num a { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.registry-num a:hover,
+.registry-title a:hover { color: var(--color-fd-primary); text-decoration: underline; }
+.registry-type, .registry-status {
+  font-size: 0.85rem;
+  color: var(--color-fd-muted-foreground);
+}
+
+.status-final { color: #16a34a; font-weight: 500; }
+.status-review { color: #ca8a04; font-weight: 500; }
+.status-draft { color: #2563eb; font-weight: 500; }
+.status-withdrawn,
+.status-superseded { color: var(--color-fd-muted-foreground); }
+
+.family-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.family-link {
+  display: grid;
+  grid-template-columns: max-content 1fr max-content;
+  gap: 16px;
+  align-items: baseline;
+  padding: 12px 16px;
+  text-decoration: none;
+  color: var(--color-fd-foreground);
+  background: var(--color-fd-card);
+  border: 1px solid var(--color-fd-border);
+  border-radius: 8px;
+  transition: background 120ms;
+}
+.family-link:hover { background: var(--color-fd-accent); }
+.family-supertype .family-link { border-color: var(--color-fd-primary); }
+.family-number {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-fd-muted-foreground);
+}
+.family-title { font-weight: 500; }
+.family-meta {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  font-size: 0.8rem;
+  color: var(--color-fd-muted-foreground);
+}
+.family-role {
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--color-fd-accent);
+  font-weight: 500;
+}
+.role-supertype {
+  background: var(--color-fd-primary);
+  color: var(--color-fd-primary-foreground);
+}
+.family-kind {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
