@@ -24,11 +24,14 @@ jobs:
         with:
           version: 10.4.1
 
+      # `cache: pnpm` would speed up installs but requires a committed
+      # pnpm-lock.yaml to compute its cache key. Skipping until we ship
+      # a standalone lockfile (see CI install step's --no-frozen-lockfile
+      # comment for context).
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
 
       # No committed lockfile yet — the site is also a workspace
       # member of the private agentik-studio monorepo where the
