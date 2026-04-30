@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { AipRegistry } from "@/components/aip-registry"
-import { ProviderFamily } from "@/components/provider-family"
+import { DriverFamily } from "@/components/driver-family"
 
 export default function HomePage(): React.ReactElement {
   return (
@@ -30,7 +30,7 @@ export default function HomePage(): React.ReactElement {
         </nav>
       </header>
 
-      <ProviderFamily />
+      <DriverFamily />
       <AipRegistry />
     </main>
   )

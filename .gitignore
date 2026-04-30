@@ -11,7 +11,10 @@ next-env.d.ts
 # The synced content under content/docs/agentproto/ is never tracked;
 # the source of truth is the public spec repo.
 .cache
-content/docs/agentproto
+# Synced specs land here at build/dev time — never committed.
+content/docs/*.mdx
+content/docs/*.json
+content/docs/resources
 
 # Fumadocs generated
 .source

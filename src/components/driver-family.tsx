@@ -1,6 +1,6 @@
 /**
  * Provider family roster — surfaces AIP-30 (the provider supertype)
- * plus every AIP whose frontmatter declares a `provider_kind`.
+ * plus every AIP whose frontmatter declares a `driver_kind`.
  * Renders as a quick visual index of "what kinds of providers exist
  * in the standard."
  */
@@ -14,7 +14,7 @@ interface FamilyEntry {
   status: string
   href: string
   role: "supertype" | "subtype"
-  providerKind: string | null
+  driverKind: string | null
 }
 
 const ROLE_LABELS: Record<FamilyEntry["role"], string> = {
@@ -35,19 +35,19 @@ function loadFamily(): FamilyEntry[] {
       aip?: number | string
       title?: string
       status?: string
-      provider_kind?: string
+      driver_kind?: string
     }
     if (data.aip === undefined || data.aip === null) continue
     const n =
       typeof data.aip === "number" ? data.aip : Number.parseInt(String(data.aip), 10)
     if (!Number.isFinite(n)) continue
 
-    const providerKind =
-      typeof data.provider_kind === "string" ? data.provider_kind : null
+    const driverKind =
+      typeof data.driver_kind === "string" ? data.driver_kind : null
     // AIP-30 is the supertype by current numbering; subtypes declare
-    // `provider_kind:` in their frontmatter.
+    // `driver_kind:` in their frontmatter.
     const isSupertype = n === 30
-    if (!providerKind && !isSupertype) continue
+    if (!driverKind && !isSupertype) continue
 
     const rawTitle = typeof data.title === "string" ? data.title : `AIP-${n}`
     entries.push({
@@ -56,7 +56,7 @@ function loadFamily(): FamilyEntry[] {
       status: typeof data.status === "string" ? data.status : "—",
       href: page.url,
       role: isSupertype ? "supertype" : "subtype",
-      providerKind,
+      driverKind,
     })
   }
 
@@ -67,14 +67,14 @@ function loadFamily(): FamilyEntry[] {
   })
 }
 
-export function ProviderFamily(): React.ReactElement {
+export function DriverFamily(): React.ReactElement {
   const entries = loadFamily()
 
   return (
-    <section className="provider-family">
-      <h2 id="provider-family">Provider family</h2>
+    <section className="driver-family">
+      <h2 id="driver-family">Provider family</h2>
       <p className="family-intro">
-        AIP-30 declares the abstract <code>PROVIDER.md</code> supertype.
+        AIP-30 declares the abstract <code>DRIVER.md</code> supertype.
         Each subtype below specialises it for one transport kind
         (cli, http, mcp, sdk, builtin).
       </p>
@@ -91,9 +91,9 @@ export function ProviderFamily(): React.ReactElement {
                 <span className={`family-role role-${entry.role}`}>
                   {ROLE_LABELS[entry.role]}
                 </span>
-                {entry.providerKind && (
+                {entry.driverKind && (
                   <span className="family-kind">
-                    kind: {entry.providerKind}
+                    kind: {entry.driverKind}
                   </span>
                 )}
                 <span className={`family-status status-${entry.status.toLowerCase()}`}>

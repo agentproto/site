@@ -34,7 +34,12 @@ const SIBLING_DIR = path.resolve(ROOT, "../agentproto")
 const SIBLING_SPECS = path.join(SIBLING_DIR, "specs")
 const CACHE_DIR = path.join(ROOT, ".cache/agentproto")
 const CACHE_SPECS = path.join(CACHE_DIR, "specs")
-const TARGET_DIR = path.join(ROOT, "content/docs/agentproto")
+// Sync directly to content/docs/ (not a sub-namespace) so URLs are
+// /docs/aip-N, matching the cross-references already authored in the
+// .mdx specs (`[AIP-2](/docs/aip-2)` etc). The Fumadocs `baseUrl`
+// in lib/docs-source.ts is `/docs`, the file becomes aip-N.mdx, and
+// the URL collapses to /docs/aip-N.
+const TARGET_DIR = path.join(ROOT, "content/docs")
 
 const REPO_URL =
   process.env.AGENTPROTO_REPO_URL ?? "https://github.com/agentproto/agentproto.git"

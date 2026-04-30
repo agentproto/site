@@ -11,7 +11,7 @@ import type { TOCItemType } from "fumadocs-core/toc"
 import { docsSource } from "@/lib/docs-source"
 import { AipRegistry } from "@/components/aip-registry"
 import { AipResources } from "@/components/aip-resources"
-import { ProviderFamily } from "@/components/provider-family"
+import { DriverFamily } from "@/components/driver-family"
 
 interface DocsParamProps {
   params: Promise<{ slug?: string[] }>
@@ -37,7 +37,7 @@ const mdxComponents = {
   // AIP-specific components used inline in spec .mdx pages.
   AipRegistry,
   AipResources,
-  ProviderFamily,
+  DriverFamily,
 } as Record<string, unknown>
 
 /**

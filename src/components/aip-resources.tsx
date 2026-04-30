@@ -32,10 +32,7 @@ interface ResourceEntry {
   relativePath: string
 }
 
-const RESOURCES_ROOT = path.join(
-  process.cwd(),
-  "content/docs/agentproto/resources"
-)
+const RESOURCES_ROOT = path.join(process.cwd(), "content/docs/resources")
 
 async function listResourceTree(
   aip: number,
