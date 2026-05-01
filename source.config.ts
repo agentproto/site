@@ -26,6 +26,13 @@ export const docs = defineDocs({
       status: z.string().optional(),
       type: z.string().optional(),
       "ref-impl": z.string().optional(),
+      // Mirror-AIP attribution: the upstream spec author when the AIP
+      // anchors a third-party standard (e.g. AIP-3 mirrors anthropics/
+      // skills, AIP-4 mirrors google-labs-code/design.md). The
+      // `aip-editor` is who maintains the AIP entry inside this
+      // registry, distinct from the spec author.
+      "spec-author": z.string().optional(),
+      "aip-editor": z.string().optional(),
       provider_kind: z
         .enum(["cli", "http", "mcp", "sdk", "builtin"])
         .optional(),
