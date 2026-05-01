@@ -10,6 +10,7 @@ import type { ComponentType } from "react"
 import type { TOCItemType } from "fumadocs-core/toc"
 import { docsSource } from "@/lib/docs-source"
 import { AipRegistry } from "@/components/aip-registry"
+import { AipsByLayer } from "@/components/aips-by-layer"
 import { AipResources } from "@/components/aip-resources"
 import { CopyPageButton } from "@/components/copy-page-button"
 import { DriverFamily } from "@/components/driver-family"
@@ -37,6 +38,7 @@ const mdxComponents = {
   ...defaultMdxComponents,
   // AIP-specific components used inline in spec .mdx pages.
   AipRegistry,
+  AipsByLayer,
   AipResources,
   DriverFamily,
   // Backward-compat alias: pre-rename specs reference <ProviderFamily />

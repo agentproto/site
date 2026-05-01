@@ -29,6 +29,20 @@ export const docs = defineDocs({
       provider_kind: z
         .enum(["cli", "http", "mcp", "sdk", "builtin"])
         .optional(),
+      // Semantic layer for the registry's 8-section grouping on /docs.
+      // Optional — un-tagged AIPs land in the catch-all "Misc" bucket.
+      layer: z
+        .enum([
+          "process",
+          "primitives",
+          "identity",
+          "memory",
+          "coordination",
+          "capabilities",
+          "drivers",
+          "surfaces",
+        ])
+        .optional(),
     }),
     postprocess: {
       includeProcessedMarkdown: true,
