@@ -11,6 +11,7 @@ import type { TOCItemType } from "fumadocs-core/toc"
 import { docsSource } from "@/lib/docs-source"
 import { AipRegistry } from "@/components/aip-registry"
 import { AipResources } from "@/components/aip-resources"
+import { CopyPageButton } from "@/components/copy-page-button"
 import { DriverFamily } from "@/components/driver-family"
 
 interface DocsParamProps {
@@ -58,6 +59,13 @@ interface AipPageData {
   full?: boolean
   toc: TOCItemType[]
   body: ComponentType<{ components?: Record<string, unknown> }>
+  /**
+   * Plain-markdown stringification emitted by fumadocs-mdx's
+   * `postprocess.includeProcessedMarkdown` (configured in
+   * `source.config.ts`). Used by `<CopyPageButton>` so users can
+   * grab the spec body for paste into an LLM chat.
+   */
+  _markdown?: string
 }
 
 export default async function Page({
@@ -77,14 +85,34 @@ export default async function Page({
         ? Number(data.aip)
         : undefined
 
+  const markdown = data._markdown ?? ""
+
   return (
     <DocsPage toc={data.toc} full={data.full}>
       <DocsTitle>{data.title ?? "Untitled"}</DocsTitle>
       {data.description && <DocsDescription>{data.description}</DocsDescription>}
       <DocsBody>
+        {markdown && (
+          <div className="not-prose mb-6 flex justify-end">
+            <CopyPageButton
+              markdown={markdown}
+              title={data.title}
+              description={data.description}
+            />
+          </div>
+        )}
         <MDXContent components={mdxComponents} />
         {aipNumber !== undefined && Number.isFinite(aipNumber) && (
           <AipResources aip={aipNumber} />
+        )}
+        {markdown && (
+          <div className="not-prose mt-8 flex justify-end">
+            <CopyPageButton
+              markdown={markdown}
+              title={data.title}
+              description={data.description}
+            />
+          </div>
         )}
       </DocsBody>
     </DocsPage>

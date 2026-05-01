@@ -1,7 +1,16 @@
 import Link from "next/link"
 import { AipRegistry } from "@/components/aip-registry"
-import { DriverFamily } from "@/components/driver-family"
 
+/**
+ * Home page — intro + registry table.
+ *
+ * The driver-family panel (AIP-30 supertype + provider_kind subtypes)
+ * is intentionally NOT rendered here: the registry table below
+ * already lists every AIP with its status, and the family view is a
+ * curated subset that's redundant on the global home. It stays
+ * available as an inline MDX component for specs that want to embed
+ * it (notably aip-30.mdx).
+ */
 export default function HomePage(): React.ReactElement {
   return (
     <main className="container mx-auto max-w-4xl px-6 py-12">
@@ -30,7 +39,6 @@ export default function HomePage(): React.ReactElement {
         </nav>
       </header>
 
-      <DriverFamily />
       <AipRegistry />
     </main>
   )
