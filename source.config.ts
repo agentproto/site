@@ -33,6 +33,14 @@ export const docs = defineDocs({
       // registry, distinct from the spec author.
       "spec-author": z.string().optional(),
       "aip-editor": z.string().optional(),
+      // Canonical npm package implementing this AIP (when applicable).
+      // Distinct from `ref-impl:` — `package` always names a published
+      // npm package, while `ref-impl:` can be any URL (a doc, a schema
+      // file, an internal path). The spec page renders this with the
+      // currently-published version fetched from the npm registry at
+      // build time, so the spec doesn't have to mirror the impl's
+      // semver. Example: `package: "@agentproto/tool"`.
+      package: z.string().optional(),
       provider_kind: z
         .enum(["cli", "http", "mcp", "sdk", "builtin"])
         .optional(),
