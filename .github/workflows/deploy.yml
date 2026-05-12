@@ -19,6 +19,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
   # Cloud Run runtime project (where the service runs). Each product
   # gets its own project for IAM isolation.
   GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
