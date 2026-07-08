@@ -70,6 +70,7 @@ export function AipRegistry(): React.ReactElement {
         {entries.length} proposals in the registry. Final specs are
         stable; Draft / Review may change before promotion.
       </p>
+      <div className="overflow-x-auto">
       <table className="registry-table">
         <thead>
           <tr>
@@ -96,6 +97,7 @@ export function AipRegistry(): React.ReactElement {
           ))}
         </tbody>
       </table>
+      </div>
     </section>
   )
 }

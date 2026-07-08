@@ -15,6 +15,11 @@ export default function Layout({
       }}
       links={[
         {
+          text: "CLI (cli.agentproto.sh)",
+          url: "https://cli.agentproto.sh",
+          external: true,
+        },
+        {
           text: "GitHub",
           url: "https://github.com/agentproto/agentproto",
           external: true,

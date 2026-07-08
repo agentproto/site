@@ -2,6 +2,19 @@
 @import "fumadocs-ui/css/neutral.css";
 @import "fumadocs-ui/css/preset.css";
 
+/* ── Landing session board: running-dot blink ──────────────────── */
+
+@keyframes session-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+.session-blink {
+  animation: session-blink 2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .session-blink { animation: none; }
+}
+
 /* ── AIP-specific component styling ─────────────────────────────── */
 
 .aip-resources,

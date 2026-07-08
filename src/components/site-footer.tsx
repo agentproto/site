@@ -28,6 +28,15 @@ export function SiteFooter(): React.ReactElement {
           </FooterLink>
         </FooterColumn>
 
+        <FooterColumn title="CLI">
+          <FooterLink href="https://cli.agentproto.sh" external>
+            cli.agentproto.sh
+          </FooterLink>
+          <FooterLink href="https://cli.agentproto.sh/panel" external>
+            Live panel
+          </FooterLink>
+        </FooterColumn>
+
         <FooterColumn title="LLM-friendly">
           <FooterLink href="/llms.txt">/llms.txt</FooterLink>
           <FooterLink href="/llms-full.txt">/llms-full.txt</FooterLink>
