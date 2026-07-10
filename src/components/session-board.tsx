@@ -40,13 +40,13 @@ const STATUS_COLOR: Record<Row["status"], string> = {
 
 export function SessionBoard(): React.ReactElement {
   return (
-    <div className="rounded-lg border border-fd-border bg-fd-card overflow-hidden">
+    <div className="min-w-0 max-w-full rounded-lg border border-fd-border bg-fd-card overflow-hidden">
       {/* titlebar */}
-      <div className="flex items-center gap-2 border-b border-fd-border px-4 py-2.5">
-        <span className="h-2.5 w-2.5 rounded-full bg-fd-muted-foreground/40" />
-        <span className="h-2.5 w-2.5 rounded-full bg-fd-muted-foreground/40" />
-        <span className="h-2.5 w-2.5 rounded-full bg-fd-muted-foreground/40" />
-        <span className="ml-2 font-mono text-xs text-fd-muted-foreground truncate">
+      <div className="flex min-w-0 items-center gap-2 border-b border-fd-border px-4 py-2.5">
+        <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-fd-muted-foreground/40" />
+        <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-fd-muted-foreground/40" />
+        <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-fd-muted-foreground/40" />
+        <span className="ml-2 min-w-0 truncate font-mono text-xs text-fd-muted-foreground">
           agentproto · gateway up · http://127.0.0.1:18790
         </span>
       </div>

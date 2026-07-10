@@ -61,7 +61,7 @@ const DEEP_DIVES = [
 function SectionLabel({ children }: { children: React.ReactNode }): React.ReactElement {
   return (
     <p className="flex items-center gap-3 font-mono text-xs uppercase tracking-[0.14em] text-fd-muted-foreground">
-      <span aria-hidden="true" className="h-px w-6 bg-fd-primary/50" />
+      <span aria-hidden="true" className="h-px w-6 shrink-0 bg-fd-primary/50" />
       {children}
     </p>
   )
@@ -77,9 +77,9 @@ export default function HomePage(): React.ReactElement {
     <main className="container mx-auto max-w-6xl px-6">
       {/* ── 1. Hero ─────────────────────────────────────────────── */}
       <section className="grid gap-12 py-16 sm:py-20 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-14">
-        <div>
+        <div className="min-w-0">
           <p className="mb-5 flex items-center gap-2 font-mono text-xs uppercase tracking-[0.14em] text-fd-muted-foreground">
-            <span aria-hidden="true" className="session-blink text-fd-primary">
+            <span aria-hidden="true" className="session-blink shrink-0 text-fd-primary">
               ▍
             </span>
             one daemon · any coding agent · real supervision
@@ -175,7 +175,7 @@ export default function HomePage(): React.ReactElement {
       {/* ── 4. Adapters ─────────────────────────────────────────── */}
       <section className="border-t border-fd-border py-16">
         <SectionLabel>Adapters — live today</SectionLabel>
-        <ul className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+        <ul className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {ADAPTERS.map(adapter => (
             <li
               key={adapter.name}
