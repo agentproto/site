@@ -1,0 +1,254 @@
+---
+title: "From leaf to orchestrator: the one tool that changes what an agent is"
+description: The bridge doesn't just add tools. It can add the one tool — agent_start — that turns a leaf executor into an orchestrator spawning real, observable, killable child sessions on the daemon.
+---
+
+In [Bridging MCP](/deep-dives/bridging-mcp) we established that
+[`earendil-works/pi`](https://github.com/earendil-works) ships no MCP client, and
+that the pi adapter bridges any MCP servers the host injects into native pi tools
+via a generated pi extension. That bridge was framed as "pi can now call injected
+toolsets." The point of this article is narrower and sharper: the bridge doesn't
+just add tools. It can add the *one* tool — `agent_start` — that changes what kind
+of agent pi is. With it, a pi session stops being a leaf executor and becomes an
+orchestrator that spawns and supervises real child sessions on the daemon.
+
+## The crux: the instruction is only executable because of the bridge
+
+Here is the chain in one line: a pi session spawned via
+`agentproto sessions start pi --orchestrator` gets the daemon's orchestration
+gateway injected as an MCP server; the bridge turns that gateway's tools into pi
+tools; pi calls `mcp__agentproto__agent_start`; the daemon creates a real child
+session.
+
+The reason this matters — and the reason it's worth its own article — is what
+happens *without* the bridge. When you pass `--orchestrator`, the daemon does two
+things independently:
+
+1. It injects the orchestration gateway MCP server into the session.
+2. It prepends the **supervisor role prompt**, which literally instructs the
+   agent: "Delegate via `agent_start`."
+
+A CLI with a native MCP client (claude-code) gets both, and the instruction is
+executable — `agent_start` is a real tool. Pi has no MCP client. So without the
+bridge, pi would receive the injected gateway *and* the "delegate via
+agent_start" instruction, and have **no `agent_start` tool to call**. It would be
+told to delegate and be structurally unable to. The bridge is the thing that
+makes the daemon's instruction executable inside pi. That's the whole story:
+delegation-as-a-tool is what promotes pi from leaf to orchestrator, and pi only
+gets that tool because the bridge synthesizes it.
+
+## Enabling the gateway
+
+Gateway injection is opt-in per session. The CLI surface is a single flag pair on
+`sessions start` (`packages/cli/src/commands/sessions.ts`):
+
+```
+sessions start flags:
+  --orchestrator                shorthand for orchestrator: true
+  --orchestrator-json <json>    object form: {"tools":[...],"maxDepth":N,"maxChildren":N}
+                                 (wins over --orchestrator when both are given)
+```
+
+`--orchestrator` resolves to `orchestrator: true` in the request body; the daemon
+mints a scoped orchestrator gateway for that session. The scope is a random
+256-bit token backing a sub-gateway endpoint at `/mcp/orchestrator`, and
+`orchestrator: true` today resolves to the **supervisor** role at mint time
+(`packages/runtime/src/orchestrator-gateway.ts`):
+
+```ts
+role: opts?.role ?? SUPERVISOR_ROLE.name,
+```
+
+The supervisor disposition is the prompt the daemon prepends
+(`packages/runtime/src/role.ts`):
+
+> You decompose, delegate, and verify. Prefer doing small work inline; delegate
+> the parts that genuinely benefit from a separate agent, and check their output
+> before relying on it. Delegate via agent_start, not your own CLI's native
+> subagent/Task tool — a native subagent is invisible to the daemon (no session
+> id, no tracking, no kill switch, nobody watching it but you), whereas
+> agent_start gives the caller a session they can actually observe and supervise.
+
+Composed onto that is a line naming the roles this session may spawn:
+`Roles you may spawn: executor, supervisor.` So the pi session boots with two
+things it didn't have a moment ago: a bridged `mcp__agentproto__agent_start`
+tool, and a system context telling it exactly when and how to use it.
+
+## The run
+
+We spawned a pi orchestrator and gave it a task that forces exactly one
+delegation with a checkable result: reply with a single known word via a child
+agent.
+
+The session prompt that came back to pi carried the supervisor disposition above.
+Pi decomposed and delegated with a single tool call:
+
+```
+> mcp__agentproto__agent_start  "Reply with exactly the word SUBAGENT-OK and nothing else."
+```
+
+The tool result — the daemon's response, marshalled back through the bridge into
+pi's tool-result channel — described a real child session:
+
+```json
+{
+  "id": "sess_05cd557b",
+  "adapterSlug": "claude-code",
+  "parentSessionId": "sess_b8cac91c",
+  "depth": 1,
+  "turnsCompleted": 1,
+  "output": ["SUBAGENT-OK"]
+}
+```
+
+Pi read that result and produced its final report:
+
+> Session id: sess_05cd557b · Exact reply: SUBAGENT-OK
+
+Nothing here is simulated. `sess_05cd557b` is a real daemon session, spawned by
+`sess_b8cac91c` (the pi orchestrator), at `depth: 1`, running the `claude-code`
+adapter. Inspecting the session tree while both were live showed the parentage
+and depth resolved correctly:
+
+```
+pi           sess_b8cac91c  depth=0  status=running  turns=1   (orchestrator)
+claude-code  sess_05cd557b  depth=1                   turns=1   (child)
+```
+
+The pi session is a genuine orchestrator: `depth=0`, one child hanging off it,
+one turn. The child is a first-class daemon session in its own right — not a
+detail hidden inside pi's process.
+
+## The role gate holds — even under a pi parent
+
+The child was spawned into the **executor** role. Its disposition (`role.ts`,
+`EXECUTOR_ROLE`):
+
+> You are the leaf. You execute the task yourself — you do not spawn or delegate
+> to another agent, even if it seems convenient or the task looks complex. Do the
+> work directly with the tools you have. This includes any subagent/Task tool
+> your own CLI ships natively — it is not routed through agentproto and the daemon
+> cannot strip it, so the rule holds regardless of what tools appear available to
+> you.
+
+The child (claude-code, which *does* ship a native Task tool) replied
+`SUBAGENT-OK` and did **not** re-delegate. That's the gate working as designed,
+and it's worth being precise about *why* it's a prompt and not purely a
+mechanism. The daemon enforces delegation policy two ways:
+
+- For its **own** MCP gateway tools (`agent_start`, `agent_prompt`), the
+  executor's `toolPolicy: { delegation: "deny" }` strips them before the child
+  ever sees them. Mechanical, airtight.
+- For a **CLI-native** subagent/Task tool bundled inside claude-code, there is
+  nothing to strip — it isn't an MCP tool routed through agentproto, so the daemon
+  can't see it or gate it. Here the disposition text is the only control, which is
+  exactly why the executor prompt spells the native case out explicitly.
+
+The failure mode this closes is the "invisible native subagent": a leaf agent
+quietly fanning out through its own CLI's Task tool, spawning work the daemon
+never sees — no session id, no tracking, no kill switch. The role prompt exists to
+keep the leaf a leaf. And the observation here is that the gate holds even when
+the *parent* is pi: pi delegated through the daemon's `agent_start` (the
+supervised path), and the executor it spawned declined to fan out further. The
+tree stayed the shape the daemon believes it is.
+
+## Supervision: opt-in, bounded, observable
+
+This is the "push orchestration to the outside" property made concrete. Because
+delegation runs through the daemon rather than inside an agent's process, every
+knob is a daemon primitive:
+
+- **Opt-in per session.** No `--orchestrator`, no gateway, no `agent_start` — pi
+  runs as a plain leaf with only its own built-in file/shell tools. The
+  capability isn't ambient.
+- **Bounded depth and fan-out.**
+  `--orchestrator-json {"maxDepth":N,"maxChildren":N}` sets the scope's ceilings;
+  the defaults are `DEFAULT_MAX_DEPTH = 3` and `DEFAULT_MAX_CHILDREN = 8`, with an
+  unconditional `HARD_MAX_DEPTH = 8` the schema clamps to. A spawn whose child
+  depth would exceed the scope is rejected with `orchestrator_max_depth_exceeded`;
+  exceeding the alive-child quota is rejected with
+  `orchestrator_child_quota_exceeded`. No session is created on rejection.
+- **Observable and killable.** `sess_05cd557b` shows up in `agentproto sessions`
+  and can be stopped with `agentproto sessions stop`, because it's a real daemon
+  session. A CLI-native subagent has none of this — the daemon can't list it,
+  can't wait on it, can't kill it. That asymmetry is the entire argument for
+  routing delegation through the daemon instead of through the agent.
+
+## The honest manifest flip
+
+Until this ran end-to-end, the pi manifest advertised `capabilities.sub_agents:
+false` — with a comment saying the capability wasn't intrinsic. It was flipped to
+`true` only *after* the run above worked, and the comment in
+`adapters/pi/src/index.ts` records exactly why:
+
+```ts
+// Pi has no NATIVE sub-agent spawn surface, but the MCP bridge makes it a
+// real orchestrator: when the host injects the daemon's orchestration gateway
+// via `mcpServers` (e.g. `sessions start pi --orchestrator`), the bridge
+// exposes `mcp__agentproto__agent_start` as a pi tool. Verified end-to-end —
+// a pi session spawned a depth-1 executor sub-agent and collected its result.
+// Advertised `true` so orchestrators/UIs know pi CAN drive sub-agents; the
+// gateway injection stays opt-in per session, and depth/fan-out are bounded
+// via `--orchestrator-json` ({ maxDepth, maxChildren }). Without an injected
+// gateway pi has no agent_start tool and behaves as a leaf executor.
+sub_agents: true,
+```
+
+The manifest bit follows the demonstrated behaviour, not the other way around.
+`true` means "pi *can* drive sub-agents when the host injects the gateway," and
+the comment is explicit that gateway injection stays opt-in and that pi without a
+gateway is a leaf. Nothing about pi's binary changed — the capability is a
+property of the daemon+bridge composition, and the manifest now says so.
+
+<Callout type="warn">
+Orchestration is verified in specific runs, not yet guaranteed for every spawn
+path. The pi-bridge delegation above is real, but the injected orchestrator
+gateway does not always reach a spawned child's full tool surface across every
+combination of adapters. Treat nested orchestration as demonstrated, not as a
+blanket guarantee — and file an issue if you hit a gap.
+</Callout>
+
+## Reproduce this from a cold clone
+
+```bash
+# 1. Clone and build the TS workspace.
+git clone https://github.com/agentproto/ts agentproto-ts
+cd agentproto-ts
+pnpm install
+pnpm -r build
+
+# 2. Provide a provider key for pi (Anthropic shown; OpenAI/Google also work).
+export ANTHROPIC_API_KEY=sk-ant-...
+
+# 3. Start the daemon (writes ~/.agentproto/runtime.json for discovery).
+agentproto daemon &
+
+# 4. Spawn a pi session AS AN ORCHESTRATOR. --orchestrator injects the
+#    daemon's orchestration gateway (bridged into pi tools) and prepends the
+#    supervisor role prompt. Bound the tree explicitly if you like:
+agentproto sessions start pi --orchestrator \
+  --orchestrator-json '{"maxDepth":2,"maxChildren":4}' \
+  --prompt 'Delegate to one sub-agent: have it reply with exactly the word
+            SUBAGENT-OK and nothing else. Report the child session id and its reply.' \
+  --attach
+
+#    Watch pi call `mcp__agentproto__agent_start` and report a child session id.
+
+# 5. In another terminal, inspect the session tree while it runs.
+agentproto sessions            # pi at depth=0, the child at depth=1
+agentproto sessions --json     # parentSessionId / depth / adapterSlug per session
+
+# 6. Prove supervision is real: stop the child (or the whole tree) by id.
+agentproto sessions stop <child-session-id>
+
+# 7. Contrast: start pi WITHOUT --orchestrator. No gateway is injected, so the
+#    bridge synthesizes no agent_start tool and pi runs as a plain leaf with
+#    only its own file/shell tools.
+agentproto sessions start pi \
+  --prompt 'Reply with exactly the word SUBAGENT-OK and nothing else.' --attach
+```
+
+The difference between steps 4 and 7 is one flag — and it's the difference
+between an orchestrator and a leaf. That difference exists only because the bridge
+from the [previous article](/deep-dives/bridging-mcp) can turn the daemon's
+injected gateway into a callable pi tool.

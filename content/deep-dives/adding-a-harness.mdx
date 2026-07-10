@@ -1,0 +1,396 @@
+---
+title: "Adding a harness: driving an agent over its own RPC mode"
+description: Most coding adapters are a thin manifest pointing at an ACP server. This one owns a subprocess and translates a bespoke wire protocol into agentproto's event taxonomy — the machinery worth seeing.
+---
+
+agentproto is a daemon plus CLI that drives coding-agent CLIs — claude-code,
+codex, hermes, opencode, mastra — through one lifecycle: install, spawn,
+dispatch a turn, stream events, resume, close. A new agent joins by writing an
+**adapter**: a manifest plus, when needed, a client, implementing the AIP-45
+AGENT-CLI contract. Once the adapter exists, the agent is a first-class slug —
+`agentproto run <slug> --prompt "…"` — indistinguishable at the host layer from
+any other.
+
+This walks through adding one for [`earendil-works/pi`](https://github.com/earendil-works)
+(`@earendil-works/pi-coding-agent`, MIT, TypeScript). pi is interesting
+precisely because it doesn't fit the common path: most coding adapters are thin
+manifests pointing at an ACP server, but pi ships no ACP server. So this adapter
+owns a subprocess and translates a bespoke wire protocol into agentproto's event
+taxonomy. That's the machinery worth seeing.
+
+## The contract and the four protocol arms
+
+Every AGENT-CLI manifest carries a `protocol` field. Its schema
+(`packages/driver/agent-cli/src/schema.ts`) is a closed enum:
+
+```ts
+protocol: z.enum(["acp", "mcp", "proprietary", "print"]),
+```
+
+Each value selects a different way the driver gets a turn in and events out:
+
+- **`acp`** — the agent itself ships an [Agent Client Protocol](https://agentclientprotocol.com)
+  server. The driver spawns it, speaks ACP JSON-RPC over stdio, and gets a
+  well-specified event stream for free. This is how claude-code, opencode,
+  hermes, and codex work; their adapters are mostly manifest.
+- **`print`** — no persistent server. The driver spawns one headless subprocess
+  per turn, parses its stdout JSONL, and the process exits when the turn ends.
+- **`mcp`** — the agent is reached as an MCP server.
+- **`proprietary`** — the driver spawns nothing on your behalf. Instead the
+  runtime dynamic-imports the adapter's own package and calls its
+  `createAgentCliClient(definition)` factory. That client owns the process and
+  transport, whatever they are.
+
+The design decision for pi is forced by fact, not taste. pi has no ACP server,
+so `acp` is out. It could run headless per turn, but it also exposes a
+persistent duplex mode — `pi --mode rpc`, JSON over stdio — that supports
+streaming and mid-turn steering, which `print`'s one-shot model throws away. The
+`proprietary` arm is the only one that lets the adapter keep that persistent
+child alive and translate its stream. So: `protocol: "proprietary"`.
+
+There's precedent to copy. `@agentproto/adapter-mastracode-inprocess` is a
+`proprietary` arm too, and its `index.ts` is the template for the manifest half
+of the job — same `defineAgentCli` shape, same `createAgentCliClient` export.
+The difference is that mastracode-inprocess runs the agent *in-process* (its
+`bin` is the placeholder string `"in-process"` and is never spawned), whereas pi
+spawns a real child. The manifest structure is identical; only the client body
+differs.
+
+## The manifest (`index.ts`)
+
+The manifest is a plain object handed to `defineAgentCli`. The load-bearing
+fields:
+
+```ts
+export const pi: AgentCliHandle = defineAgentCli({
+  name: "Pi",
+  id: "pi",
+  version: "0.1.0",
+  bin: "pi",
+  // …
+  protocol: "proprietary",
+  adapter: "@agentproto/adapter-pi",
+  // …
+})
+```
+
+`protocol: "proprietary"` plus `adapter` is the pair the runtime keys on: the
+schema requires `adapter` (the npm package implementing `AgentCliClient`) exactly
+when `protocol` is `proprietary`. `bin` is required by the schema for every arm,
+but a proprietary arm never spawns it for you — that's the client's job. The pi
+client still *reads* `definition.bin` to know what to spawn, with an env
+override for tests:
+
+```ts
+// bin: "pi",
+// Real binary. The proprietary arm never spawns it for you (that's
+// client.ts's job) but the AIP-45 schema requires the field, and client.ts
+// reads `definition.bin` (overridable via AGENTPROTO_PI_BIN) to spawn
+// `pi --mode rpc`.
+```
+
+The `options` block declares the two knobs the runtime forwards to `connect()`:
+
+```ts
+options: [
+  {
+    id: "model",
+    type: "string",
+    description:
+      "Provider/model pattern passed to pi's `--model` (e.g. `anthropic/claude-sonnet-4-5`).",
+  },
+  {
+    id: "effort",
+    type: "enum",
+    enum: ["off", "minimal", "low", "medium", "high", "xhigh"],
+    description:
+      "Thinking level, mapped 1:1 to pi's `set_thinking_level` RPC command.",
+  },
+],
+```
+
+`model` and `effort` are the ids `createAgentCliRuntime` reads off
+`config.options` and threads into `connect()`. The client turns `model` into a
+`--model` spawn flag and `effort` into a `set_thinking_level` RPC command — both
+1:1 with pi's own vocabulary, so the manifest invents nothing.
+
+Two more honesty-preserving choices. `capabilities.sub_agents` is `false`: pi
+has no native sub-agent spawn surface, and while the MCP bridge can make it an
+orchestrator when the host injects one, that capability isn't intrinsic to pi,
+so it stays off (until [the third article](/deep-dives/leaf-to-orchestrator)
+earns the flip). And `modes` has a single `default` entry — pi's RPC surface has
+no plan/build/read-only switch to expose, so declaring more would be inventing
+modes that don't exist. `continuation.default` is `native-resume`, because pi
+persists sessions and can reattach via `--session <id>`.
+
+## The client (`client.ts`)
+
+`createAgentCliClient` returns an `AgentCliClient` — five methods the runner
+calls: `connect`, `send`, `events`, `cancel`, `close`, plus a `sessionId`
+getter. The whole job is to make `pi --mode rpc` look like that interface.
+
+`connect()` builds the argv and spawns the child:
+
+```ts
+const args = ["--mode", "rpc"]
+if (opts.model) args.push("--model", opts.model)
+if (opts.resumeSessionId) args.push("--session", opts.resumeSessionId)
+// …
+const proc = spawn(resolveBin(opts.env), args, {
+  cwd: opts.cwd,
+  env: childEnv,
+  stdio: ["pipe", "pipe", "pipe"],
+})
+```
+
+Note what travels as argv versus what travels as an RPC command. Model and
+resume-session are spawn-time flags (`--model`, `--session`) because pi resolves
+them at startup. Effort is a runtime command, sent after the child is up.
+
+Two things need to be reliable on a JSON-over-stdio channel: knowing when the
+child is ready, and correlating replies to requests. pi's `get_state` command
+solves both. It's the readiness probe *and* it returns pi's assigned
+`sessionId`, captured in one round-trip:
+
+```ts
+// Probe readiness and capture pi's session id in one round-trip.
+const state = await Promise.race([
+  request("get_state"),
+  new Promise<never>((_resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(`pi did not respond to get_state within ${CONNECT_TIMEOUT_MS}ms. …`))
+    }, CONNECT_TIMEOUT_MS)
+    if (typeof timer.unref === "function") timer.unref()
+  }),
+])
+
+const data = state.data
+if (data !== null && typeof data === "object" && "sessionId" in data) {
+  const sid = data.sessionId
+  if (typeof sid === "string") piSessionId = sid
+}
+```
+
+Correlation is a `Map<string, PendingCommand>`. Every request gets a fresh
+`randomUUID()` id written on the wire; when a `{type:"response"}` line comes back
+with that id, the matching promise resolves:
+
+```ts
+function request(type: string, extra: Record<string, unknown> = {}): Promise<PiResponse> {
+  const id = randomUUID()
+  return new Promise<PiResponse>((resolve, reject) => {
+    pending.set(id, { resolve, reject })
+    try {
+      write({ id, type, ...extra })
+    } catch (err) {
+      pending.delete(id)
+      reject(err instanceof Error ? err : new Error(String(err)))
+    }
+  })
+}
+```
+
+`prompt` is deliberately *not* a `request()`. It's fire-and-forget: pi acks it
+to confirm preflight, but the real work arrives as an event stream, not a reply.
+So `send()` writes the prompt directly and sets up a fresh per-turn queue:
+
+```ts
+async send(_turnId: string, message: unknown): Promise<void> {
+  if (!child) throw new Error("pi: send() called before connect()")
+  resetPiMapperState(mapperState)
+  currentTurn = new TurnChannel()
+  write({ id: randomUUID(), type: "prompt", message: extractPromptText(message) })
+},
+```
+
+`TurnChannel` is a minimal async queue: session events, once mapped, are
+`push`ed onto it, and `events()` iterates it. The only subtlety is closing —
+when a mapped event is a `turn-end`, the channel closes, which ends the
+`for await` in `events()`:
+
+```ts
+function handleEvent(event: PiSessionEvent): void {
+  onActivity?.()
+  const turn = currentTurn
+  if (!turn) return
+  for (const mapped of mapPiEvent(event, piSessionId ?? "", mapperState)) {
+    turn.push(mapped)
+    if (mapped.kind === "turn-end") turn.close()
+  }
+}
+```
+
+The stdout reader is a standard LF-framed line splitter over a `StringDecoder`.
+Each complete line goes to `classifyPiLine`; responses route to the correlation
+map, session events route to the mapper. A failed `prompt` ack, an unexpected
+process exit, or an abort all funnel into `failCurrentTurn`, which pushes an
+`error` then a `turn-end{error}` so `events()` always terminates rather than
+hanging.
+
+## The translation (`pi-events.ts`)
+
+This is the file that earns the `proprietary` label. pi's stdout carries two
+record kinds — responses (handled above) and session events — and the job is to
+narrow the latter from `unknown` into a typed union and map it onto agentproto's
+`StreamEvent` taxonomy (defined in `packages/acp/src/types.ts`: `text-delta`,
+`thought`, `tool-call`, `tool-result`, `usage_update`, `turn-end`, `error`, …).
+The whole module is pure and synchronous, so it's unit-testable against
+hand-built records without spawning pi, and it does the narrowing with type
+guards rather than `as` casts — a `check-types` bar the package holds (no
+`any`/`unknown`/`as`).
+
+The mapping, from `mapPiEvent`:
+
+| pi event | StreamEvent |
+| --- | --- |
+| `message_update` / `text_delta` | `text-delta` |
+| `message_update` / `thinking_delta` | `thought` |
+| `tool_execution_start` | `tool-call` |
+| `tool_execution_end` | `tool-result` |
+| `turn_end.message.usage` | `usage_update` |
+| `agent_end` (willRetry ≠ true) | `turn-end` |
+
+The `text-delta` and `tool-call` arms are direct:
+
+```ts
+case "message_update": {
+  const inner = event.assistantMessageEvent
+  switch (inner.type) {
+    case "text_delta":
+      return [{ kind: "text-delta", sessionId, text: inner.delta }]
+    case "thinking_delta":
+      return [{ kind: "thought", sessionId, text: inner.delta }]
+    // …
+  }
+}
+```
+
+Stop-reason handling is the fiddly part. pi reports its `StopReason` mid-stream
+(on a `message_update` done/error, and again on `turn_end.message.stopReason`),
+but the turn doesn't *close* on either. So the reason is remembered in a small
+`PiMapperState` and mapped only when the terminator arrives:
+
+```ts
+export function mapStopReason(
+  reason: PiStopReason | undefined,
+): "completed" | "cancelled" | "max_turns" | "error" {
+  switch (reason) {
+    case "aborted":
+      return "cancelled"
+    case "error":
+      return "error"
+    case "length":
+      return "max_turns"
+    case "stop":
+    case "toolUse":
+    case undefined:
+      return "completed"
+  }
+}
+```
+
+`length` (pi hit a token/context cap) has no exact agentproto equivalent;
+`max_turns` is the closest "hit a budget limit" reason, so that's the mapping.
+
+### The `agent_settled` finding
+
+The non-obvious part, and the one that cost a debugging iteration. pi has an
+`agent_settled` event that looks like the natural turn terminator. It is not —
+on the wire, at least. `agent_settled` is emitted only to pi's in-process
+extension listeners; it is **not written to the RPC stdout stream** (verified
+empirically against pi 0.80.3). Waiting for it on stdout hangs forever.
+
+The real terminator on the wire is `agent_end`:
+
+```ts
+case "agent_end":
+  // `willRetry: true` = an auto-retry cycle; the turn isn't over. Only a
+  // terminal `agent_end` closes the turn.
+  if (event.willRetry === true) return []
+  return [{ kind: "turn-end", sessionId, reason: mapStopReason(state.lastStopReason) }]
+```
+
+`agent_end` fires on auto-retry cycles too, hence the `willRetry` guard: a retry
+`agent_end` is dropped (pi will run again and emit a final one), and only the
+terminal one produces `turn-end`. `agent_settled` is still handled in the
+`switch` — it returns `[]` — so that if a future pi build *did* stream it, the
+turn is already closed by `agent_end` and ignoring it stays correct either way.
+
+## Driving it
+
+With the package built, the CLI can run pi like any other slug. A plain turn:
+
+```
+$ agentproto run pi --prompt "Reply with exactly the word DRIVEN and nothing else."
+DRIVEN
+[turn-end: completed]
+```
+
+The `[turn-end: completed]` line is the `turn-end{completed}` event — proof the
+`agent_end` terminator and `mapStopReason(undefined) → completed` path fired
+correctly.
+
+A tool-using turn, streamed as JSON with `--json`, exercises the full mapping.
+Asking pi to run `echo agentproto-pi-live` through its own `bash` tool produced
+this tally of event kinds:
+
+```
+{ tool-call: 1, tool-result: 1, usage_update: 2, text-delta: 2, turn-end: 1 }
+```
+
+The single `tool-call` is pi's `bash` tool invoking `echo agentproto-pi-live`;
+the matching `tool-result` carries `agentproto-pi-live` back. The two
+`usage_update`s come from `turn_end.message.usage` on each of pi's internal
+turns; the `text-delta`s are the assistant's surrounding prose; and the lone
+`turn-end` closes the stream.
+
+The verification bar for the adapter: it builds (tsup, ESM), passes `check-types`
+with no `any`/`unknown`/`as` casts (the RPC stream is parsed into a typed union
+with guards in `pi-events.ts`), and ships 20 unit tests covering the mapper and
+the manifest shape.
+
+## Reproduce this from a cold clone
+
+```bash
+# 1. Clone and install (pnpm workspace)
+git clone https://github.com/agentproto/ts agentproto-ts
+cd agentproto-ts
+pnpm install
+
+# 2. Build the packages and adapters (includes @agentproto/adapter-pi and the CLI)
+pnpm build
+
+# 3. Type-check the adapter — no any/unknown/as
+pnpm --filter @agentproto/adapter-pi check-types
+
+# 4. Run the mapper + manifest unit tests (20 tests, no real pi needed)
+pnpm --filter @agentproto/adapter-pi test
+
+# 5. Install pi (the real binary) and an API key
+npm install -g @earendil-works/pi-coding-agent
+export ANTHROPIC_API_KEY=sk-...
+
+# 6. Drive a plain turn
+node packages/cli/dist/cli.mjs run pi \
+  --prompt "Reply with exactly the word DRIVEN and nothing else."
+#   → DRIVEN
+#   → [turn-end: completed]
+
+# 7. Drive a tool-using turn, streamed as JSON
+node packages/cli/dist/cli.mjs run pi --json \
+  --prompt "Run: echo agentproto-pi-live"
+#   → a tool-call (pi's bash) + tool-result carrying agentproto-pi-live
+#   → usage_update / text-delta events, then turn-end
+```
+
+Steps 1–4 need no API key or pi install — the adapter builds, type-checks, and
+its mapper tests pass in isolation. Steps 6–7 need a real `pi` on PATH (or point
+`AGENTPROTO_PI_BIN` at a local install) and a provider key. That's the whole
+harness: one manifest, one client that owns `pi --mode rpc`, and one pure mapper
+from pi's event stream to agentproto's taxonomy.
+
+---
+
+Next: pi runs, but it's still a leaf with only its own file/shell tools — the
+daemon's injected toolsets are invisible to it, because pi ships no MCP client.
+[Bridging MCP](/deep-dives/bridging-mcp) fixes that without forking pi.

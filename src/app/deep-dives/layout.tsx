@@ -1,20 +1,25 @@
 import { DocsLayout } from "fumadocs-ui/layouts/docs"
-import { docsSource } from "@/lib/docs-source"
+import { deepDivesSource } from "@/lib/deep-dives-source"
 
-export default function Layout({
+/**
+ * Deep-dives section layout — the same Fumadocs docs chrome (sidebar
+ * tree, nav, theme toggle) as /docs, driven by the deepDives tree.
+ * The root layout still renders the SiteFooter outside this.
+ */
+export default function DeepDivesLayout({
   children,
 }: {
   children: React.ReactNode
 }): React.ReactElement {
   return (
     <DocsLayout
-      tree={docsSource.pageTree}
+      tree={deepDivesSource.pageTree}
       nav={{
         title: "agentproto",
         url: "/",
       }}
       links={[
-        { text: "Deep dives", url: "/deep-dives", external: false },
+        { text: "Specs", url: "/docs", external: false },
         {
           text: "CLI (cli.agentproto.sh)",
           url: "https://cli.agentproto.sh",
@@ -22,7 +27,7 @@ export default function Layout({
         },
         {
           text: "GitHub",
-          url: "https://github.com/agentproto/agentproto",
+          url: "https://github.com/agentproto/ts",
           external: true,
         },
       ]}
