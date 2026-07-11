@@ -60,8 +60,11 @@ const DEEP_DIVES = [
  */
 function SectionLabel({ children }: { children: React.ReactNode }): React.ReactElement {
   return (
-    <p className="flex items-center gap-3 font-mono text-xs uppercase tracking-[0.14em] text-fd-muted-foreground">
-      <span aria-hidden="true" className="h-px w-6 shrink-0 bg-fd-primary/50" />
+    <p className="font-mono text-xs uppercase tracking-[0.14em] text-fd-muted-foreground">
+      <span
+        aria-hidden="true"
+        className="mr-3 inline-block h-px w-6 translate-y-[-3px] bg-fd-primary/50 align-middle"
+      />
       {children}
     </p>
   )
@@ -78,8 +81,8 @@ export default function HomePage(): React.ReactElement {
       {/* ── 1. Hero ─────────────────────────────────────────────── */}
       <section className="grid gap-12 py-16 sm:py-20 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-14">
         <div className="min-w-0">
-          <p className="mb-5 flex items-center gap-2 font-mono text-xs uppercase tracking-[0.14em] text-fd-muted-foreground">
-            <span aria-hidden="true" className="session-blink shrink-0 text-fd-primary">
+          <p className="mb-5 font-mono text-xs uppercase tracking-[0.14em] text-fd-muted-foreground">
+            <span aria-hidden="true" className="session-blink mr-2 text-fd-primary">
               ▍
             </span>
             one daemon · any coding agent · real supervision
