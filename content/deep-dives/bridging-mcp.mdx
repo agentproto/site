@@ -1,0 +1,415 @@
+---
+title: Teaching a no-MCP agent to use MCP
+description: The agent ships no MCP client, so the daemon's injected tools are invisible to it. Instead of forking, we generate an extension that speaks MCP on the agent's behalf.
+---
+
+In [Adding a harness](/deep-dives/adding-a-harness) we built a
+proprietary-protocol adapter that drives
+[`earendil-works/pi`](https://github.com/earendil-works) as a spawned child over
+its JSON-over-stdio RPC mode (`pi --mode rpc`). That gets pi running under
+agentproto — but it stops short of the thing that makes agentproto useful.
+
+## The problem: pi ships no MCP client
+
+agentproto's `connect()` hands an adapter a set of `mcpServers`. The host injects
+these: the daemon's own orchestration gateway (so a spawned agent can start
+sub-agents), browser tools, scoped toolsets. For the ACP arm this is trivial —
+ACP has native MCP mounting. But pi ships **neither ACP nor MCP**. It has its own
+file/shell tools and no way to mount an external MCP server.
+
+So the pi adapter's original `connect({ mcpServers })` did the only honest thing
+it could: it dropped the injected servers with a warning and ran pi with its
+built-ins only. Which means the entire point of spawning pi under agentproto —
+giving it the daemon's tools — was unreachable.
+
+The naive fix is to fork pi and add an MCP client. That's a maintenance tarpit:
+you now track upstream forever. There's a better seam.
+
+## The insight: pi has a first-class extension system
+
+pi loads TypeScript **extensions** via a repeatable `--extension`/`-e` flag. An
+extension is a file whose default export receives pi's `ExtensionAPI` and
+registers custom tools. From pi's own `examples/extensions/hello.ts`:
+
+```ts
+import { Type } from "@earendil-works/pi-ai";
+import { defineTool, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
+
+const helloTool = defineTool({
+  name: "hello",
+  label: "Hello",
+  description: "A simple greeting tool",
+  parameters: Type.Object({
+    name: Type.String({ description: "Name to greet" }),
+  }),
+  async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
+    return {
+      content: [{ type: "text", text: `Hello, ${params.name}!` }],
+      details: { greeted: params.name },
+    };
+  },
+});
+
+export default function (pi: ExtensionAPI) {
+  pi.registerTool(helloTool);
+}
+```
+
+That's the whole shape: `pi.registerTool(defineTool({ name, description, parameters, execute }))`.
+A tool has a JSON-Schema-ish `parameters` and an async `execute` returning
+`{ content, details }`.
+
+So we don't fork pi. We **generate an extension** that turns each injected MCP
+tool into a native pi tool, and load it with `-e`. pi never learns MCP; the
+extension speaks MCP on pi's behalf.
+
+## Architecture: one static bundle + a per-session config JSON
+
+The load-bearing decision is *what* to generate. The tempting version is: emit
+an extension source file per spawn, baking the tools in. That means shipping a
+TypeScript compiler / bundler into the runtime path and re-bundling
+`@modelcontextprotocol/sdk` on every `connect()`. No.
+
+Instead: the extension is **built once, statically**, at adapter build time. It's
+data-driven at runtime by a per-session config JSON. The tsup config emits a
+second bundle for exactly this:
+
+```ts
+entry: {
+  index: "src/index.ts",
+  "mcp-bridge-extension": "src/mcp-bridge/extension.ts",
+},
+format: ["esm"],
+splitting: false,
+external: ["@agentproto/driver-agent-cli"],
+noExternal: [/@modelcontextprotocol\/sdk/],
+```
+
+Two rules make the bundle work inside a foreign process:
+
+1. **The MCP SDK is inlined** (`noExternal`). pi's process has no way to resolve
+   `@modelcontextprotocol/sdk`, so it must be self-contained. `splitting: false`
+   keeps it a single file with no sibling chunks for pi/jiti to chase.
+2. **pi's own packages are never imported.** The extension uses pi's *structural*
+   runtime contract — a `registerTool` method, a plain JSON Schema as
+   `parameters` — not its types. So the bundle imports nothing from
+   `@earendil-works/*`:
+
+   ```
+   $ grep -c "@earendil-works" dist/mcp-bridge-extension.mjs
+   0
+   ```
+
+That zero is the whole import-resolution question, answered by construction (more
+below). The bundle lands at ~650 KB, SDK inlined.
+
+At `connect()`, the adapter enumerates each server's tools, writes
+`{ servers, tools }` to a temp JSON, and adds `-e <bundle>` +
+`PI_MCP_BRIDGE_CONFIG=<path>` to the pi argv:
+
+```ts
+if (opts.mcpServers?.length) {
+  const { config, errors } = await enumerateMcpTools(opts.mcpServers)
+  for (const e of errors) {
+    console.warn(`[adapter-pi] mcp-bridge: server "${e.server}" unavailable — ${e.message}`)
+  }
+  if (config.tools.length > 0) {
+    const dir = mkdtempSync(join(tmpdir(), "pi-mcp-bridge-"))
+    const configPath = join(dir, "config.json")
+    writeFileSync(configPath, JSON.stringify(config), "utf8")
+    bridgeTempDir = dir
+    childEnv[BRIDGE_CONFIG_ENV] = configPath
+    args.push("-e", bridgeExtensionPath())
+    console.info(
+      `[adapter-pi] mcp-bridge: bridged ${config.tools.length} tool(s) across ` +
+        `${config.servers.length} MCP server(s) into pi.`,
+    )
+  }
+}
+```
+
+The extension path resolves from the adapter's own module URL, not cwd:
+
+```ts
+function bridgeExtensionPath(): string {
+  return fileURLToPath(new URL("./mcp-bridge-extension.mjs", import.meta.url))
+}
+```
+
+`close()` removes the temp dir (best-effort; the MCP clients live inside pi and
+die with the child). When no servers are injected, none of this runs and pi
+behaves exactly as before.
+
+## Enumeration: probe host-side, register synchronously in pi
+
+Enumeration happens on the *adapter* side, not in the extension. For each
+injected server we open a short-lived MCP client, `tools/list`, and close it:
+
+```ts
+for (const server of servers) {
+  const spec = toBridgeServerSpec(server)
+  try {
+    const client = await connectMcpClient(spec)
+    try {
+      toolsByServer.set(server.name, await listMcpTools(client))
+    } finally {
+      await client.close()
+    }
+  } catch (err) {
+    errors.push({ server: server.name, message: err instanceof Error ? err.message : String(err) })
+  }
+}
+```
+
+Two reasons for probing host-side: it surfaces connect/list failures early, on
+the host, where the adapter can log a clean summary (a dead server contributes
+no tools; the rest still bridge). And — the important one — it means the tool
+specs are already known when pi loads the extension, so **registration can be
+fully synchronous** (see the two unknowns below). The live tool *calls* happen
+later, from inside pi, over its own fresh connections. The cost: stdio servers
+get spawned twice (probe + live), a documented gap.
+
+## The extension: synchronous register, lazy client, error-safe execute
+
+The extension reads its config from the env and registers one pi tool per spec —
+synchronously, in the factory:
+
+```ts
+export function registerBridge(pi: PiExtensionAPI, config: BridgeConfig): number {
+  const getClient = createClientPool(config.servers)
+  for (const spec of config.tools) {
+    pi.registerTool({
+      name: spec.toolName,
+      label: spec.remoteName,
+      description: spec.description,
+      promptSnippet: `Call the ${spec.remoteName} MCP tool (bridged from server "${spec.server}").`,
+      promptGuidelines: [ /* … */ ],
+      parameters: spec.inputSchema,
+      execute: buildExecute(getClient, spec),
+    })
+  }
+  return config.tools.length
+}
+
+export default function mcpBridgeExtension(pi: PiExtensionAPI): void {
+  registerBridge(pi, loadConfig())
+}
+```
+
+Note `parameters: spec.inputSchema` — the raw MCP JSON Schema, passed straight
+through. pi validates tool arguments by compiling `tool.parameters`; a raw JSON
+Schema compiles and validates unchanged, so there's no need to import a pi schema
+lib or cast anything. That's what keeps the bundle pi-agnostic.
+
+MCP clients are opened **lazily and memoized per server** — connect once on first
+call, reuse thereafter:
+
+```ts
+function createClientPool(servers: readonly BridgeServerSpec[]): (name: string) => Promise<Client> {
+  const byName = new Map<string, BridgeServerSpec>()
+  for (const spec of servers) byName.set(spec.name, spec)
+  const clients = new Map<string, Promise<Client>>()
+  return name => {
+    const existing = clients.get(name)
+    if (existing) return existing
+    const spec = byName.get(name)
+    if (!spec) {
+      return Promise.reject(new Error(`[adapter-pi mcp-bridge] unknown server "${name}"`))
+    }
+    const pending = connectMcpClient(spec).catch((err: unknown) => {
+      // Don't cache a failed connection — allow a later retry.
+      clients.delete(name)
+      throw err instanceof Error ? err : new Error(String(err))
+    })
+    clients.set(name, pending)
+    return pending
+  }
+}
+```
+
+We cache the *promise*, not the resolved client, so concurrent calls share one
+connect; a failed connect is evicted so a later call can retry.
+
+`execute` opens (or reuses) the client, calls `callTool`, maps the result — and
+catches everything, so pi never sees an uncaught throw:
+
+```ts
+return async (_id, params, signal) => {
+  try {
+    const client = await getClient(spec.server)
+    const raw = await callMcpTool(client, spec.remoteName, params, signal)
+    return mapMcpResultToPiResult(raw, spec.server, spec.remoteName)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    return {
+      content: [{ type: "text", text: `MCP bridge error (${spec.server}/${spec.remoteName}): ${message}` }],
+      details: { server: spec.server, tool: spec.remoteName, isError: true },
+    }
+  }
+}
+```
+
+The `signal` is forwarded to the SDK (`callTool({ signal })`); whether the remote
+server honors it is up to the server.
+
+## Namespacing and result mapping
+
+Bridged tools are named `mcp__<server>__<tool>`, sanitized to `[a-zA-Z0-9_-]` and
+capped at 64 chars (provider tool-name limits). Collisions after
+sanitizing/truncation get a numeric suffix:
+
+```ts
+export function bridgedToolName(
+  prefix: string, serverName: string, remoteName: string, used: Set<string>,
+): string {
+  const base = `${prefix}${sanitizeSegment(serverName)}__${sanitizeSegment(remoteName)}`
+  let candidate = base.slice(0, MAX_TOOL_NAME_LEN)
+  let counter = 2
+  while (used.has(candidate)) {
+    const suffix = `_${counter}`
+    candidate = `${base.slice(0, MAX_TOOL_NAME_LEN - suffix.length)}${suffix}`
+    counter += 1
+  }
+  used.add(candidate)
+  return candidate
+}
+```
+
+The `mcp__` prefix also keeps bridged tools from clashing with pi's built-ins
+(`read`, `bash`, …).
+
+MCP `callTool` returns content blocks with an optional `isError` flag. The mapper
+takes text blocks directly and **stringifies** every non-text block into a
+labeled text block, so nothing is silently lost to the model:
+
+```ts
+function extractTextBlock(block: unknown): ExtractedBlock {
+  if (isRecord(block) && block.type === "text" && typeof block.text === "string") {
+    return { isText: true, text: block.text }
+  }
+  // Non-text (image/audio/resource/…) or malformed → stringify for the model.
+  return { isText: false, text: safeStringify(block) }
+}
+```
+
+An `isError: true` result becomes text the model can read and recover from (MCP's
+tool-error convention), with `details.isError` set for logs. The mapper takes
+`unknown` and narrows with guards, so it never depends on a specific SDK result
+type — which makes it trivially unit-testable.
+
+## Two make-or-break unknowns, resolved by running
+
+Two things could have sunk this design. Neither was resolved by reading docs or
+assuming — both were pinned by running against pi 0.80.3.
+
+**1. Async-load semantics.** pi's loader `await`s the extension factory. Is
+`registerTool()` valid *during* load, before that await resolves? If registration
+had to happen in some later lifecycle hook, the synchronous-register design
+fails. It doesn't: pi's loader explicitly permits `registerTool()` during
+extension load (same as `hello.ts`), so the bridge registers synchronously in the
+factory and is independent of any async timing. Proven live — pi called
+`mcp__echo__echo` in a real `--mode rpc` session.
+
+**2. Import resolution.** How does an extension living *outside* pi's tree
+resolve `@earendil-works/*`? pi loads extensions with jiti, which aliases those
+packages to pi's own install — but relying on that is fragile. We made the
+question moot: the bundle imports nothing from `@earendil-works/*` (the `grep`
+→ `0` above). The only import that matters is the inlined SDK, and it
+live-surfaced one real fix. The SDK's transitive `cross-spawn` does a CommonJS
+`require()` of node builtins, which esbuild's `__require` helper turns into
+"Dynamic require … is not supported". The fix is a banner in the tsup config
+supplying a real `require`:
+
+```ts
+import { createRequire as __agp_createRequire } from "module"
+const require = __agp_createRequire(import.meta.url)
+```
+
+## Live end-to-end
+
+A ~30-line stdio MCP `echo` server, bridged into a real pi session, with a prompt
+that forces the tool. The stream:
+
+```
+[adapter-pi] mcp-bridge: bridged 1 tool(s) across 1 MCP server(s) into pi.
+{"kind":"tool-call","toolName":"mcp__echo__echo","arguments":{"text":"bridged-ok"}}
+{"kind":"tool-result","result":{"content":[{"type":"text","text":"bridged-ok"}],"details":{"server":"echo","tool":"echo","isError":false}}}
+{"kind":"turn-end","reason":"completed"}
+```
+
+pi selected a bridged tool, the extension proxied the call over the SDK, and the
+mapped result came back in pi's tool-result shape.
+
+## The payoff
+
+The same mechanism bridges the daemon's own orchestration gateway. Inject it as
+an MCP server and `mcp__agentproto__agent_start` becomes an ordinary pi tool. A pi
+session then spawned a depth-1 executor sub-agent end-to-end — i.e. the bridge
+turns a leaf agent into an orchestrator without pi ever speaking MCP.
+[The next article](/deep-dives/leaf-to-orchestrator) covers that in depth.
+
+## Verification bar
+
+- Build green: `dist/mcp-bridge-extension.mjs` ~650 KB, `grep -c "@earendil-works"`
+  → `0`, SDK inlined.
+- `check-types` clean — no `any`/`unknown`/`as` in the bridge surface (`unknown`
+  appears only as guarded input to the mapper).
+- 47 unit tests: config generation, result mapping, namespacing/collision, schema
+  passthrough, config parse round-trip, register+execute, enumerate. The MCP SDK
+  is mocked — no real servers in unit tests.
+
+## Documented gaps (honesty is the register)
+
+- **Image/binary MCP content** is stringified to text, not mapped to a pi image
+  block. Text tools (the common case) are lossless.
+- **No MCP sampling / elicitation / roots.** The bridge is one-directional (pi →
+  tool call → result).
+- **Cancellation** is forwarded to `callTool({ signal })`; honoring it depends on
+  the server.
+- **Brokered credentials** aren't resolved — only static `headers` on a mounted
+  server are honored. A credential reference must be resolved to headers by the
+  host before injection.
+- **Double connect for stdio** — the adapter probes each stdio server to
+  enumerate, then the extension re-spawns it for live calls (two spawns total).
+
+## Reproduce this from a cold clone
+
+You need Node ≥ 20, `pnpm`, a global `pi` (v0.80.x), and `ANTHROPIC_API_KEY`.
+
+1. **Clone and install:**
+   ```bash
+   git clone https://github.com/agentproto/ts agentproto-ts
+   cd agentproto-ts
+   pnpm install
+   ```
+
+2. **Build the adapter (emits both bundles):**
+   ```bash
+   pnpm --filter @agentproto/adapter-pi build
+   ```
+
+3. **Confirm the bundle is pi-agnostic and SDK-inlined:**
+   ```bash
+   cd adapters/pi
+   grep -c "@earendil-works" dist/mcp-bridge-extension.mjs   # → 0
+   du -k dist/mcp-bridge-extension.mjs                        # ~650 KB
+   ```
+
+4. **Run the unit tests (SDK mocked, no real servers):**
+   ```bash
+   pnpm --filter @agentproto/adapter-pi test
+   ```
+
+5. **Bridge a tiny echo MCP server into a real pi session.** The repo ships this
+   exact harness at `adapters/pi/e2e/` — it injects the echo server as
+   `{ name: "echo", transport: "stdio", ref: echoServerPath }`, prompts pi to
+   call it, and asserts the stream:
+   ```bash
+   ANTHROPIC_API_KEY=sk-… node adapters/pi/e2e/run-e2e.mjs
+   ```
+   Expect the `bridged N tool(s)` log line, a `tool-call` for `mcp__echo__echo`, a
+   `tool-result` carrying the echoed text, and a completed `turn-end`.
+
+The mechanism generalizes: swap the echo server for any MCP server — including
+the daemon's `agent_start` gateway — and pi gains those tools without ever
+learning MCP.

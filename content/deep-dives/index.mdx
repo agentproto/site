@@ -1,0 +1,45 @@
+---
+title: Deep dives
+description: Code-first, reproducible walkthroughs of how agentproto actually works — adapters, the MCP bridge, and turning a leaf agent into an orchestrator.
+---
+
+These are the long-form, code-first companions to the [spec index](/docs)
+and the [feature breakdown](/features). Each one takes a single real
+mechanism, walks the code that implements it, and ends with a
+**reproduce-from-a-cold-clone** section you can run yourself.
+
+The discipline is the point: every code quote is checked against the real
+source file it comes from, every number is one an actual run produced, and
+where the system still has rough edges, the article says so rather than
+smoothing them over.
+
+## The pi arc
+
+The three pieces below form one argument, told in escalating stakes. They
+use [`earendil-works/pi`](https://github.com/earendil-works) — a small,
+MIT-licensed coding agent with no ACP server and no MCP client — as a
+deliberately hostile test case. If agentproto can turn *that* into a
+first-class, supervisable, orchestrating citizen of a fleet, the adapter
+model holds for anything.
+
+<Cards>
+  <Card
+    title="1 · Adding a harness"
+    href="/deep-dives/adding-a-harness"
+    description="Driving an agent CLI that ships no ACP server — one manifest, one client that owns its RPC subprocess, one pure event mapper."
+  />
+  <Card
+    title="2 · Bridging MCP"
+    href="/deep-dives/bridging-mcp"
+    description="Teaching an agent with no MCP client to call MCP tools — a generated extension that speaks MCP on the agent's behalf. No fork."
+  />
+  <Card
+    title="3 · Leaf to orchestrator"
+    href="/deep-dives/leaf-to-orchestrator"
+    description="The one bridged tool — agent_start — that promotes a leaf executor into an orchestrator spawning real, observable child sessions."
+  />
+</Cards>
+
+Read them in order: each earns the next. A driven agent is still a leaf;
+the bridge makes the daemon's tools reachable; and one of those tools is
+what changes what kind of agent it is.

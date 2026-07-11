@@ -4,6 +4,7 @@ import type { LinkItemType } from "fumadocs-ui/layouts/shared"
 const NAV_LINKS: LinkItemType[] = [
   { text: "Features", url: "/features", external: false },
   { text: "Compare", url: "/compare", external: false },
+  { text: "Deep dives", url: "/deep-dives", external: false },
   { text: "Specs", url: "/docs", external: false },
   {
     text: "CLI",

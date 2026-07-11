@@ -68,6 +68,18 @@ export const docs = defineDocs({
   },
 })
 
+/**
+ * Deep dives — the site's own long-form, code-first content wave.
+ *
+ * Unlike `docs` (which is wiped and re-synced from the public spec
+ * repo by `scripts/sync-content.mjs`), this collection is authored
+ * and tracked directly in `content/deep-dives/` — it is site content,
+ * not mirrored spec content. Plain frontmatter: title + description.
+ */
+export const deepDives = defineDocs({
+  dir: "content/deep-dives",
+})
+
 export default defineConfig({
   mdxOptions: {},
 })

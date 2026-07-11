@@ -1,0 +1,9 @@
+{
+  "title": "Deep dives",
+  "pages": [
+    "index",
+    "adding-a-harness",
+    "bridging-mcp",
+    "leaf-to-orchestrator"
+  ]
+}
