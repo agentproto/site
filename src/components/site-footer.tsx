@@ -57,7 +57,7 @@ export function SiteFooter(): React.ReactElement {
       <div className="border-t border-fd-border">
         <div className="mx-auto max-w-6xl px-6 py-4 text-xs text-fd-muted-foreground flex justify-between gap-4 flex-wrap">
           <span>
-            Specs: CC-BY-4.0 · Code: MIT · © 2026 agentproto contributors
+            Specs: CC-BY-4.0 · Code: Apache-2.0 · © 2026 agentproto contributors
           </span>
           <span>
             <a
