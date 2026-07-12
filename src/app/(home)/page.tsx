@@ -172,7 +172,85 @@ export default function HomePage(): React.ReactElement {
         </div>
       </section>
 
-      {/* ── 4. What it is ───────────────────────────────────────── */}
+      {/* ── 4. MCP ingress — it works both directions ───────────── */}
+      <section className="border-t border-fd-border py-16">
+        <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+          <div>
+            <SectionLabel>or zero new commands</SectionLabel>
+            <h2 className="mt-4 mb-3 font-serif text-3xl font-bold tracking-tight text-balance">
+              Claude Code can drive the daemon — from inside its own loop
+            </h2>
+            <p className="mb-5 max-w-lg leading-relaxed text-fd-muted-foreground">
+              The daemon is an MCP server. Register it once and the agent
+              you already use gains agentproto&apos;s tools: it spawns real
+              sessions on any adapter — observable, gateable, killable —
+              instead of invisible native subagents.
+            </p>
+            <pre className="mb-4 max-w-lg overflow-x-auto border border-fd-border bg-fd-card p-4 font-mono text-[12.5px] leading-relaxed">
+              <code>{`# Claude Code (native HTTP transport)
+claude mcp add --transport http agentproto \\
+  http://127.0.0.1:18790/mcp
+
+# Codex, Cursor, Claude Desktop (stdio)
+agentproto mcp-bridge`}</code>
+            </pre>
+            <a
+              href="https://cli.agentproto.sh/docs/guides/mcp-in-coding-cli"
+              className="font-medium text-fd-primary hover:underline"
+            >
+              Full guide: MCP inside coding CLIs →
+            </a>
+          </div>
+          <div className="min-w-0 max-w-full overflow-hidden border border-[var(--term-line)] bg-[var(--term-bg)] shadow-[0_24px_50px_-20px_rgba(6,24,16,0.55)]">
+            <div className="flex items-center gap-2.5 border-b border-[var(--term-line)] px-4 py-2.5">
+              <span
+                aria-hidden="true"
+                className="session-blink h-2 w-2 shrink-0 rounded-full bg-[var(--phos)]"
+              />
+              <span className="font-mono text-xs text-[var(--term-dim)]">
+                claude code — with agentproto tools
+              </span>
+            </div>
+            <div className="overflow-x-auto whitespace-nowrap p-5 font-mono text-[13px] leading-[1.9] text-[var(--term-dim)]">
+              <div className="min-w-[380px]">
+                <div>
+                  <span className="text-[var(--term-text)]">&gt;</span>{" "}
+                  <span className="text-[var(--term-text)]">
+                    spin up a codex session to fix the flaky test
+                  </span>
+                </div>
+                <div className="mt-2">
+                  ⏺ agentproto · <span className="text-[var(--term-text)]">agent_start</span>
+                </div>
+                <div>
+                  {"  "}⎿ adapter codex · prompt &quot;fix the flaky test&quot;
+                </div>
+                <div>
+                  {"  "}⎿ <span className="session-blink text-[var(--phos)]">●</span>{" "}
+                  <span className="text-[var(--phos)]">s_9k2f</span> · running
+                </div>
+                <div className="mt-2">
+                  ⏺ agentproto · <span className="text-[var(--term-text)]">session_monitor</span>{" "}
+                  s_9k2f
+                </div>
+                <div>
+                  {"  "}⎿ <span className="text-[var(--phos)]">✓</span> turn-end · gate
+                  lint+test <span className="text-[var(--phos)]">passed</span>
+                </div>
+                <div className="mt-2 text-[var(--term-text)]">
+                  Done — commit staged behind the gate,
+                </div>
+                <div className="text-[var(--term-text)]">
+                  {"  "}awaiting your ack{" "}
+                  <span className="session-blink text-[var(--amber)]">▶</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 5. What it is ───────────────────────────────────────── */}
       <section className="border-t border-fd-border py-16">
         <div className="grid gap-10 md:grid-cols-3">
           <div className="border-t-2 border-fd-primary pt-5">
