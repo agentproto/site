@@ -12,7 +12,7 @@ export function SiteFooter(): React.ReactElement {
         <div className="space-y-2">
           <div className="font-semibold text-fd-foreground">agentproto</div>
           <p className="text-fd-muted-foreground leading-relaxed">
-            Open standards for the AI-agent ecosystem.
+            One daemon for every coding agent — built on open standards.
           </p>
         </div>
 
