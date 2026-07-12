@@ -1,6 +1,6 @@
 import Link from "next/link"
-import { AipRegistry } from "@/components/aip-registry"
 import { CopyCommand } from "@/components/copy-command"
+import { QuickstartTerminal } from "@/components/quickstart-terminal"
 import { SessionBoard } from "@/components/session-board"
 
 const ADAPTERS = [
@@ -54,16 +54,19 @@ const DEEP_DIVES = [
 ]
 
 /**
- * A section eyebrow: a mono label preceded by a short accent rule.
- * Gives every section a consistent, terminal-flavored header without a
- * heavy visual system. Used for the mono uppercase section labels.
+ * A section eyebrow: a mono label preceded by a short ultramarine
+ * rule. Gives every section a consistent, document-flavored header.
  */
-function SectionLabel({ children }: { children: React.ReactNode }): React.ReactElement {
+function SectionLabel({
+  children,
+}: {
+  children: React.ReactNode
+}): React.ReactElement {
   return (
     <p className="font-mono text-xs uppercase tracking-[0.14em] text-fd-muted-foreground">
       <span
         aria-hidden="true"
-        className="mr-3 inline-block h-px w-6 translate-y-[-3px] bg-fd-primary/50 align-middle"
+        className="mr-3 inline-block h-0.5 w-6 translate-y-[-3px] bg-fd-primary align-middle"
       />
       {children}
     </p>
@@ -73,7 +76,9 @@ function SectionLabel({ children }: { children: React.ReactNode }): React.ReactE
 /**
  * Home page — the launch landing page. One job: make a skeptical,
  * terminal-native developer run `npm i -g @agentproto/cli` — or at
- * least click GitHub.
+ * least click GitHub. Product leads; the AIP spec family appears
+ * once, at the end, as the credibility floor (full registry lives
+ * under /docs).
  */
 export default function HomePage(): React.ReactElement {
   return (
@@ -81,14 +86,15 @@ export default function HomePage(): React.ReactElement {
       {/* ── 1. Hero ─────────────────────────────────────────────── */}
       <section className="grid gap-12 py-16 sm:py-20 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-14">
         <div className="min-w-0">
-          <p className="mb-5 font-mono text-xs uppercase tracking-[0.14em] text-fd-muted-foreground">
+          <p className="mb-6 font-mono text-xs uppercase tracking-[0.14em] text-fd-muted-foreground">
             <span aria-hidden="true" className="session-blink mr-2 text-fd-primary">
               ▍
             </span>
             one daemon · any coding agent · real supervision
           </p>
-          <h1 className="mb-5 text-4xl font-bold leading-[1.05] tracking-tight text-balance sm:text-5xl">
-            One daemon to run every coding agent — and actually supervise them
+          <h1 className="mb-6 font-serif text-4xl font-bold leading-[1.07] tracking-tight text-balance sm:text-[3.4rem]">
+            One daemon runs every coding agent.{" "}
+            <em className="text-fd-primary">And actually supervises them.</em>
           </h1>
           <p className="mb-8 max-w-xl text-lg leading-relaxed text-fd-muted-foreground text-pretty">
             Claude Code, Codex, Hermes, opencode, and Mastra get the same
@@ -99,10 +105,10 @@ export default function HomePage(): React.ReactElement {
           <div className="mb-6">
             <CopyCommand command="npm i -g @agentproto/cli" />
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="mb-8 flex flex-wrap gap-3">
             <a
               href="https://cli.agentproto.sh"
-              className="rounded-md bg-fd-primary px-4 py-2 font-medium text-fd-primary-foreground transition-opacity hover:opacity-90"
+              className="bg-fd-foreground px-5 py-2 font-medium text-fd-background transition-opacity hover:opacity-85"
             >
               Start the daemon
             </a>
@@ -110,28 +116,31 @@ export default function HomePage(): React.ReactElement {
               href="https://github.com/agentproto/ts"
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-md border border-fd-border px-4 py-2 font-medium transition-colors hover:border-fd-primary/40"
+              className="border border-fd-border px-5 py-2 font-medium transition-colors hover:border-fd-primary/50"
             >
               GitHub
             </a>
           </div>
+          <p className="font-mono text-xs text-fd-muted-foreground">
+            9 adapters · MIT · npm <span className="text-fd-foreground">@agentproto/cli</span>
+          </p>
         </div>
         <SessionBoard />
       </section>
 
       {/* ── 2. Proof strip ──────────────────────────────────────── */}
-      <section className="border-t border-fd-border py-16">
+      <section className="border-t border-fd-border py-14">
         <SectionLabel>People are hand-rolling this today.</SectionLabel>
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
-          {PROOF.map(p => (
+        <div className="mt-8 grid gap-y-8 md:grid-cols-3 md:divide-x md:divide-fd-border md:gap-y-0">
+          {PROOF.map((p, i) => (
             <figure
               key={p.attribution}
-              className="flex flex-col gap-3 rounded-lg border border-fd-border bg-fd-card p-5"
+              className={i === 0 ? "md:pr-8" : i === 1 ? "md:px-8" : "md:pl-8"}
             >
-              <blockquote className="text-sm leading-relaxed text-fd-foreground">
+              <blockquote className="font-serif text-[17px] italic leading-snug text-fd-foreground">
                 &ldquo;{p.quote}&rdquo;
               </blockquote>
-              <figcaption className="mt-auto font-mono text-xs text-fd-muted-foreground">
+              <figcaption className="mt-3 font-mono text-xs text-fd-muted-foreground">
                 — {p.attribution}
               </figcaption>
             </figure>
@@ -139,31 +148,51 @@ export default function HomePage(): React.ReactElement {
         </div>
       </section>
 
-      {/* ── 3. What it is ───────────────────────────────────────── */}
+      {/* ── 3. Quickstart — moved up: prove it in 30 seconds ────── */}
       <section className="border-t border-fd-border py-16">
-        <div className="grid gap-8 md:grid-cols-3">
+        <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
           <div>
-            <h2 className="mb-2 font-mono text-xs uppercase tracking-[0.14em] text-fd-foreground">
-              One lifecycle
+            <SectionLabel>quickstart</SectionLabel>
+            <h2 className="mt-4 mb-3 font-serif text-3xl font-bold tracking-tight text-balance">
+              Three commands to a running, watchable agent
             </h2>
+            <p className="max-w-md leading-relaxed text-fd-muted-foreground">
+              Install, serve, start a session. Then gate it: attach a
+              policy to any session&apos;s turn-end and stage the commit
+              behind a human ack.
+            </p>
+            <Link
+              href="/deep-dives"
+              className="mt-4 inline-block font-medium text-fd-primary hover:underline"
+            >
+              See how it works inside →
+            </Link>
+          </div>
+          <QuickstartTerminal />
+        </div>
+      </section>
+
+      {/* ── 4. What it is ───────────────────────────────────────── */}
+      <section className="border-t border-fd-border py-16">
+        <div className="grid gap-10 md:grid-cols-3">
+          <div className="border-t-2 border-fd-primary pt-5">
+            <h2 className="mb-2 font-serif text-xl font-bold">One lifecycle</h2>
             <p className="text-sm leading-relaxed text-fd-muted-foreground">
               The same start, prompt, monitor, and kill verbs across every
               adapter. Stop memorizing five different CLIs — one daemon, one
               interface, nine adapters today.
             </p>
           </div>
-          <div>
-            <h2 className="mb-2 font-mono text-xs uppercase tracking-[0.14em] text-fd-foreground">
-              Real supervision
-            </h2>
+          <div className="border-t-2 border-fd-primary pt-5">
+            <h2 className="mb-2 font-serif text-xl font-bold">Real supervision</h2>
             <p className="text-sm leading-relaxed text-fd-muted-foreground">
               Policy gates fire on turn-end — shell command or LLM judge. A
               commit can be staged behind the gate and wait for an explicit
               human ack. It all survives a client disconnect.
             </p>
           </div>
-          <div>
-            <h2 className="mb-2 font-mono text-xs uppercase tracking-[0.14em] text-fd-foreground">
+          <div className="border-t-2 border-fd-primary pt-5">
+            <h2 className="mb-2 font-serif text-xl font-bold">
               Composition, not a framework
             </h2>
             <p className="text-sm leading-relaxed text-fd-muted-foreground">
@@ -175,17 +204,17 @@ export default function HomePage(): React.ReactElement {
         </div>
       </section>
 
-      {/* ── 4. Adapters ─────────────────────────────────────────── */}
+      {/* ── 5. Adapters ─────────────────────────────────────────── */}
       <section className="border-t border-fd-border py-16">
         <SectionLabel>Adapters — live today</SectionLabel>
-        <ul className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        <ul className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
           {ADAPTERS.map(adapter => (
             <li
               key={adapter.name}
-              className="flex items-center justify-between gap-2 rounded-md border border-fd-border bg-fd-card px-3 py-2.5"
+              className="flex items-center justify-between gap-2 border border-fd-border bg-fd-card px-3 py-2.5"
             >
               <span className="font-mono text-sm">{adapter.name}</span>
-              <span className="rounded bg-fd-muted px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wide text-fd-muted-foreground">
+              <span className="font-mono text-[10px] uppercase tracking-wide text-fd-muted-foreground">
                 {adapter.kind}
               </span>
             </li>
@@ -195,11 +224,9 @@ export default function HomePage(): React.ReactElement {
               href="https://github.com/agentproto/ts"
               target="_blank"
               rel="noopener noreferrer"
-              className="block rounded-md border border-dashed border-fd-border bg-fd-card px-3 py-2.5 transition-colors hover:border-fd-primary/40"
+              className="block border border-dashed border-fd-border bg-fd-card px-3 py-2.5 transition-colors hover:border-fd-primary/50"
             >
-              <span className="font-mono text-sm text-fd-foreground">
-                yours?
-              </span>
+              <span className="font-mono text-sm text-fd-primary">yours?</span>
               <span className="mt-0.5 block font-mono text-[10px] uppercase tracking-wide text-fd-muted-foreground">
                 Write an adapter
               </span>
@@ -208,21 +235,67 @@ export default function HomePage(): React.ReactElement {
         </ul>
       </section>
 
-      {/* ── 5. See it work ──────────────────────────────────────── */}
+      {/* ── 6. Supervision, on stage ────────────────────────────── */}
       <section className="border-t border-fd-border py-16">
-        <SectionLabel>quickstart</SectionLabel>
-        <pre className="mt-6 overflow-x-auto rounded-lg border border-fd-border bg-fd-card p-5 font-mono text-[13px] leading-relaxed">
-          <code>{`agentproto serve
-agentproto sessions start claude-code --prompt "refactor the payments module"
-agentproto sessions --watch`}</code>
-        </pre>
-        <p className="mt-3 text-sm text-fd-muted-foreground">
-          Three commands. Then gate it: attach a policy to any
-          session&rsquo;s turn-end and stage the commit behind a human ack.
-        </p>
+        <div className="grid gap-10 lg:grid-cols-[1fr_1fr] lg:items-center">
+          <div>
+            <SectionLabel>the part nobody else does</SectionLabel>
+            <h2 className="mt-4 mb-3 font-serif text-3xl font-bold tracking-tight text-balance">
+              A gate between your agents and your main branch
+            </h2>
+            <p className="mb-4 max-w-lg leading-relaxed text-fd-muted-foreground">
+              Every session turn-end can trigger a policy: a shell command
+              (lint, tests) or an LLM judge. The commit is staged behind the
+              gate and waits for your explicit ack — from any client, or
+              none. Close your laptop; the daemon keeps supervising.
+            </p>
+            <Link
+              href="/features"
+              className="font-medium text-fd-primary hover:underline"
+            >
+              Full features breakdown →
+            </Link>
+          </div>
+          <div className="min-w-0 max-w-full overflow-hidden border border-[var(--term-line)] bg-[var(--term-bg)] shadow-[0_24px_50px_-20px_rgba(6,24,16,0.55)]">
+            <div className="flex items-center gap-2.5 border-b border-[var(--term-line)] px-4 py-2.5">
+              <span
+                aria-hidden="true"
+                className="session-blink h-2 w-2 shrink-0 rounded-full bg-[var(--amber)]"
+              />
+              <span className="font-mono text-xs text-[var(--term-dim)]">
+                policy · session review · turn-end
+              </span>
+            </div>
+            <div className="overflow-x-auto whitespace-nowrap p-5 font-mono text-[13px] leading-[1.9] text-[var(--term-dim)]">
+              <div className="min-w-[340px]">
+                <div>
+                  turn-end <span className="text-[var(--term-text)]">review</span> · gate{" "}
+                  <span className="text-[var(--term-text)]">lint+test</span> attached
+                </div>
+                <div>
+                  <span className="text-[var(--phos)]">✓</span> pnpm lint — clean
+                </div>
+                <div>
+                  <span className="text-[var(--phos)]">✓</span> pnpm test — 214 passed
+                </div>
+                <div>
+                  <span className="text-[var(--phos)]">✓</span> judge: &ldquo;diff matches the brief&rdquo;
+                </div>
+                <div>
+                  commit <span className="text-[var(--term-text)]">a41f9c2</span> staged
+                  behind gate
+                </div>
+                <div className="text-[var(--amber)]">
+                  <span className="session-blink">▶</span> awaiting human ack —{" "}
+                  <span className="text-[var(--term-text)]">agentproto ack s_7f2k</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
-      {/* ── 6. Deep dives ───────────────────────────────────────── */}
+      {/* ── 7. Deep dives ───────────────────────────────────────── */}
       <section className="border-t border-fd-border py-16">
         <div className="mb-6 flex flex-wrap items-baseline justify-between gap-2">
           <SectionLabel>Deep dives — read the code</SectionLabel>
@@ -233,7 +306,7 @@ agentproto sessions --watch`}</code>
             all deep dives →
           </Link>
         </div>
-        <p className="mb-6 max-w-2xl text-sm leading-relaxed text-fd-muted-foreground">
+        <p className="mb-8 max-w-2xl text-sm leading-relaxed text-fd-muted-foreground">
           Code-first, reproducible walkthroughs — each takes one real
           mechanism, walks the source, and ends with commands you can run on
           a cold clone. The three below turn a hostile agent (no ACP, no MCP)
@@ -244,12 +317,12 @@ agentproto sessions --watch`}</code>
             <li key={d.href}>
               <Link
                 href={d.href}
-                className="group flex h-full flex-col rounded-lg border border-fd-border bg-fd-card p-5 transition-colors hover:border-fd-primary/40"
+                className="group flex h-full flex-col border border-fd-border bg-fd-card p-6 transition-colors hover:border-fd-primary/50"
               >
-                <span className="font-mono text-xs text-fd-muted-foreground">
+                <span className="font-mono text-xs text-fd-primary">
                   {d.step}
                 </span>
-                <h3 className="mt-2 mb-2 font-semibold group-hover:text-fd-primary">
+                <h3 className="mt-3 mb-2 font-serif text-xl font-bold group-hover:text-fd-primary">
                   {d.title}
                 </h3>
                 <p className="text-sm leading-relaxed text-fd-muted-foreground">
@@ -261,9 +334,12 @@ agentproto sessions --watch`}</code>
         </ul>
       </section>
 
-      {/* ── 7. Honest split ─────────────────────────────────────── */}
+      {/* ── 8. Honest split ─────────────────────────────────────── */}
       <section className="border-t border-fd-border py-16">
-        <h2 className="mb-3 text-xl font-semibold">What&apos;s real vs. roadmap</h2>
+        <SectionLabel>errata, in advance</SectionLabel>
+        <h2 className="mt-4 mb-3 font-serif text-2xl font-bold tracking-tight">
+          What&apos;s real vs. roadmap
+        </h2>
         <p className="mb-4 max-w-2xl leading-relaxed text-fd-muted-foreground">
           The CLI, the nine adapters above, and the orchestration/
           supervision primitives (nested orchestration, policy gates,
@@ -273,19 +349,30 @@ agentproto sessions --watch`}</code>
           finished implementations. We&apos;d rather say that plainly
           than have you find out the hard way.
         </p>
-        <div className="flex flex-wrap gap-x-5 gap-y-2">
-          <Link href="/features" className="font-medium text-fd-primary hover:underline">
-            Full features breakdown →
-          </Link>
-          <Link href="/docs" className="font-medium text-fd-primary hover:underline">
-            See the full spec index →
-          </Link>
-        </div>
+        <Link href="/features" className="font-medium text-fd-primary hover:underline">
+          Full features breakdown →
+        </Link>
       </section>
 
-      {/* ── 8. AipRegistry (spec index) — unchanged ────────────── */}
-      <section className="border-t border-fd-border py-16">
-        <AipRegistry />
+      {/* ── 9. Specs pointer — the credibility floor ────────────── */}
+      <section className="border-t border-fd-border py-14">
+        <div className="flex flex-wrap items-center justify-between gap-6 border border-fd-border bg-fd-card px-6 py-6 sm:px-8">
+          <div className="min-w-0">
+            <p className="font-mono text-xs uppercase tracking-[0.14em] text-fd-muted-foreground">
+              built on a written standard
+            </p>
+            <p className="mt-2 max-w-xl font-serif text-lg font-bold leading-snug">
+              Every contract the daemon implements is specified in the open —
+              the AIP family, AIP-1 through AIP-52.
+            </p>
+          </div>
+          <Link
+            href="/docs"
+            className="shrink-0 border border-fd-foreground/80 px-5 py-2 font-medium transition-colors hover:border-fd-primary hover:text-fd-primary"
+          >
+            Read the specs →
+          </Link>
+        </div>
       </section>
     </main>
   )

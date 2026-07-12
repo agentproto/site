@@ -33,10 +33,13 @@ export function CopyCommand({
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-2 rounded-lg border border-fd-border bg-fd-card px-3 py-2 font-mono text-sm",
+        "inline-flex items-center gap-2 border border-fd-foreground/80 bg-fd-card px-3.5 py-2 font-mono text-sm",
         className
       )}
     >
+      <span aria-hidden="true" className="font-semibold text-fd-primary">
+        $
+      </span>
       <span className="select-all text-fd-foreground">{command}</span>
       <button
         type="button"
