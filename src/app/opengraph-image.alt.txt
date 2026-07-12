@@ -1,0 +1,1 @@
+agentproto — one daemon runs every coding agent, and supervises them. A session board with running agents and a staged commit awaiting human ack.

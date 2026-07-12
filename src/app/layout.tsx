@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { IBM_Plex_Mono, IBM_Plex_Sans, IBM_Plex_Serif } from "next/font/google"
 import { RootProvider } from "fumadocs-ui/provider/next"
+import { BrandRibbon } from "@/components/brand-ribbon"
 import { SiteFooter } from "@/components/site-footer"
 import "./global.css"
 
@@ -52,6 +53,7 @@ export default function RootLayout({
     >
       <body className="flex flex-col min-h-screen">
         <RootProvider>
+          <BrandRibbon current="protocol" />
           <div className="flex-1">{children}</div>
           <SiteFooter />
         </RootProvider>
