@@ -18,7 +18,8 @@ const ROWS: Row[] = [
     dimension: "Agents supported",
     agentproto:
       "Claude Code, Codex, Hermes, opencode, Mastra (Code + Agent), claude-sdk (Anthropic/Moonshot/OpenRouter), OpenClaw, browser-as-agent — uniform AIP-45 manifests",
-    paseo: "Claude Code, Codex, Copilot, OpenCode, Pi — one interface",
+    paseo:
+      "Claude Code, Codex, Copilot, OpenCode, Pi — plus custom providers (custom binaries, ACP agents, Anthropic-compatible endpoints)",
     claudeSquad: "Claude Code, Codex, Gemini, Aider, other local agents",
     conductor: "Claude Code, Codex, Cursor",
     agentFarm: "Claude Code only (by design)",
@@ -57,7 +58,7 @@ const ROWS: Row[] = [
     agentproto:
       "Yes — shell or LLM-judge gate on turn-end, event bus, commit gated on human ack; survives client disconnect",
     paseo:
-      "Partial — Ralph-style loop skill with optional verifier; no per-turn policy gates or commits staged behind an ack",
+      "Partial — remote approval of agents' own permission prompts, plus a Ralph-loop skill with optional verifier; no daemon-side turn-end gates or commit staging",
     claudeSquad: "No — human watches the TUI",
     conductor: "No — human reviews in the app",
     agentFarm: "Partial — workload watchdog (auto-restart), not per-turn gates",
@@ -81,6 +82,26 @@ const ROWS: Row[] = [
     claudeSquad: "No",
     conductor: "No",
     agentFarm: "No",
+  },
+  {
+    dimension: "Your own tools, shared with every agent",
+    agentproto:
+      "Yes — author a tool once (TOOL contract + DRIVER implementation), the daemon serves it over MCP to every agent; external MCP servers can be imported and handed to any agent at spawn",
+    paseo:
+      "No — the daemon injects only its own control tools (agents, terminals, schedules, permissions) into agents",
+    claudeSquad: "No",
+    conductor: "No",
+    agentFarm: "No",
+  },
+  {
+    dimension: "Scheduled / recurring runs",
+    agentproto:
+      "Yes — workflows (staged concurrency, schema-validated outputs, cost ceilings) + durable cron on the daemon",
+    paseo:
+      "Yes — recurring schedules on an agent, with run history, manageable over MCP",
+    claudeSquad: "No",
+    conductor: "No",
+    agentFarm: "Partial — batch runs, not scheduled",
   },
   {
     dimension: "License / platform",
