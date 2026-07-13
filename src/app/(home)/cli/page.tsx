@@ -12,20 +12,19 @@ export const metadata: Metadata = {
 
 const ADAPTERS: {
   name: string
-  kind: string
   icon: string
   /** currentColor SVG rendered black — invert it in dark mode */
   mono?: boolean
 }[] = [
-  { name: "Claude Code", kind: "cli", icon: "/icons/adapters/claude.svg" },
-  { name: "Claude SDK", kind: "sdk", icon: "/icons/adapters/anthropic.svg", mono: true },
-  { name: "Codex", kind: "cli", icon: "/icons/adapters/openai.svg", mono: true },
-  { name: "Hermes", kind: "cli", icon: "/icons/adapters/hermes.svg", mono: true },
-  { name: "opencode", kind: "cli", icon: "/icons/adapters/opencode.svg", mono: true },
-  { name: "Mastra Code", kind: "cli", icon: "/icons/adapters/mastra.svg", mono: true },
-  { name: "Mastra Agent", kind: "sdk", icon: "/icons/adapters/mastra.svg", mono: true },
-  { name: "OpenClaw", kind: "cli", icon: "/icons/adapters/openclaw.png" },
-  { name: "Browser", kind: "target", icon: "/icons/adapters/browser.svg", mono: true },
+  { name: "Claude Code", icon: "/icons/adapters/claude.svg" },
+  { name: "Claude SDK", icon: "/icons/adapters/anthropic.svg", mono: true },
+  { name: "Codex", icon: "/icons/adapters/openai.svg", mono: true },
+  { name: "Hermes", icon: "/icons/adapters/hermes.svg", mono: true },
+  { name: "opencode", icon: "/icons/adapters/opencode.svg", mono: true },
+  { name: "Mastra Code", icon: "/icons/adapters/mastra.svg", mono: true },
+  { name: "Mastra Agent", icon: "/icons/adapters/mastra.svg", mono: true },
+  { name: "OpenClaw", icon: "/icons/adapters/openclaw.png" },
+  { name: "Browser", icon: "/icons/adapters/browser.svg", mono: true },
 ]
 
 const DEEP_DIVES = [
@@ -68,9 +67,12 @@ function SectionLabel({
 
 /**
  * /cli — the product page for the human gateway: run, watch, and
- * gate your coding agents from the terminal or the web. The
- * framework story (composable primitives) lives on the homepage;
- * this page owns the babysitter wedge end-to-end.
+ * gate your coding agents from the terminal or the web.
+ *
+ * Section order is a deliberate argument: promise (hero) →
+ * qualification (works with your agents, any vendor) → pain
+ * (babysitter) → proof (quickstart) → visibility (fleet board) →
+ * scale (orchestration) → safety (the gate) → depth (deep dives).
  */
 export default function CliPage(): React.ReactElement {
   return (
@@ -121,7 +123,55 @@ export default function CliPage(): React.ReactElement {
         <SessionBoard />
       </section>
 
-      {/* ── 2. Problem → solution ───────────────────────────────── */}
+      {/* ── 2. Works with — any agent, any vendor, any model ────── */}
+      <section className="border-t border-fd-border py-12">
+        <SectionLabel>any agent · any vendor · any model</SectionLabel>
+        <h2 className="mt-4 mb-3 font-serif text-3xl font-bold tracking-tight text-balance">
+          Mix vendors. Route by cost.
+        </h2>
+        <p className="mb-6 max-w-2xl leading-relaxed text-fd-muted-foreground">
+          Claude for the plan, Codex for the refactor, a cheap open model
+          for the mechanical work — same commands, same list, same checks.
+          When a better or cheaper model ships, it&apos;s an adapter away,
+          not a migration. No vendor decides what your fleet looks like.
+        </p>
+        <ul className="flex flex-wrap gap-2">
+          {ADAPTERS.map(adapter => (
+            <li
+              key={adapter.name}
+              className="flex items-center gap-2.5 border border-fd-border bg-fd-card px-3 py-2"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={adapter.icon}
+                alt=""
+                aria-hidden="true"
+                width={16}
+                height={16}
+                className={
+                  "h-4 w-4 shrink-0 object-contain" +
+                  (adapter.mono ? " dark:invert" : "")
+                }
+              />
+              <span className="font-mono text-sm">{adapter.name}</span>
+            </li>
+          ))}
+          <li>
+            <a
+              href="https://github.com/agentproto/ts"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2.5 border border-dashed border-fd-border bg-fd-card px-3 py-2 transition-colors hover:border-fd-primary/50"
+            >
+              <span className="font-mono text-sm text-fd-primary">
+                yours? write an adapter
+              </span>
+            </a>
+          </li>
+        </ul>
+      </section>
+
+      {/* ── 3. Problem → solution ───────────────────────────────── */}
       <section className="border-t border-fd-border py-14">
         <SectionLabel>the problem</SectionLabel>
         <h2 className="mt-4 mb-8 font-serif text-3xl font-bold tracking-tight text-balance">
@@ -154,7 +204,7 @@ export default function CliPage(): React.ReactElement {
         </div>
       </section>
 
-      {/* ── 3. Quickstart ───────────────────────────────────────── */}
+      {/* ── 4. Quickstart ───────────────────────────────────────── */}
       <section className="border-t border-fd-border py-16">
         <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
           <div>
@@ -178,7 +228,7 @@ export default function CliPage(): React.ReactElement {
         </div>
       </section>
 
-      {/* ── 4. Fleet, from anywhere ─────────────────────────────── */}
+      {/* ── 5. Fleet, from anywhere ─────────────────────────────── */}
       <section className="border-t border-fd-border py-16">
         <SectionLabel>your gateway, on any screen</SectionLabel>
         <h2 className="mt-4 mb-3 font-serif text-3xl font-bold tracking-tight text-balance">
@@ -218,148 +268,23 @@ export default function CliPage(): React.ReactElement {
         </div>
       </section>
 
-      {/* ── 5. Your agent, promoted ─────────────────────────────── */}
+      {/* ── 6. Orchestration — one agent manages the others ─────── */}
       <section className="border-t border-fd-border py-16">
-        <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-          <div>
-            <SectionLabel>your agent, promoted</SectionLabel>
-            <h2 className="mt-4 mb-3 font-serif text-3xl font-bold tracking-tight text-balance">
-              One agent can manage the others
-            </h2>
-            <p className="mb-5 max-w-lg leading-relaxed text-fd-muted-foreground">
-              agentproto plugs into the agent you already use, as tools.
-              Ask Claude Code to spin up a Codex session for a fix — or
-              three cheap open-model sessions for the grunt work — and
-              every one of them shows up in the same list, gated by the
-              same checks. Visible child sessions, not invisible
-              subagents. That&apos;s a team, run from your prompt.
-            </p>
-            <pre className="mb-4 max-w-lg overflow-x-auto border border-fd-border bg-fd-card p-4 font-mono text-[12.5px] leading-relaxed">
-              <code>{`# Claude Code (native HTTP transport)
-claude mcp add --transport http agentproto \\
-  http://127.0.0.1:18790/mcp
-
-# Codex, Cursor, Claude Desktop (stdio)
-agentproto mcp-bridge`}</code>
-            </pre>
-            <a
-              href="https://cli.agentproto.sh/docs/guides/mcp-in-coding-cli"
-              className="font-medium text-fd-primary hover:underline"
-            >
-              Full guide: MCP inside coding CLIs →
-            </a>
-          </div>
-          <div className="min-w-0 max-w-full overflow-hidden border border-[var(--term-line)] bg-[var(--term-bg)] shadow-[0_24px_50px_-20px_rgba(6,24,16,0.55)]">
-            <div className="flex items-center gap-2.5 border-b border-[var(--term-line)] px-4 py-2.5">
-              <span
-                aria-hidden="true"
-                className="session-blink h-2 w-2 shrink-0 rounded-full bg-[var(--phos)]"
-              />
-              <span className="font-mono text-xs text-[var(--term-dim)]">
-                claude code — with agentproto tools
-              </span>
-            </div>
-            <div className="overflow-x-auto whitespace-nowrap p-5 font-mono text-[13px] leading-[1.9] text-[var(--term-dim)]">
-              <div className="min-w-[380px]">
-                <div>
-                  <span className="text-[var(--term-text)]">&gt;</span>{" "}
-                  <span className="text-[var(--term-text)]">
-                    spin up a codex session to fix the flaky test
-                  </span>
-                </div>
-                <div className="mt-2">
-                  ⏺ agentproto ·{" "}
-                  <span className="text-[var(--term-text)]">agent_start</span>
-                </div>
-                <div>
-                  {"  "}⎿ adapter codex · prompt &quot;fix the flaky test&quot;
-                </div>
-                <div>
-                  {"  "}⎿{" "}
-                  <span className="session-blink text-[var(--phos)]">●</span>{" "}
-                  <span className="text-[var(--phos)]">s_9k2f</span> · running
-                </div>
-                <div className="mt-2">
-                  ⏺ agentproto ·{" "}
-                  <span className="text-[var(--term-text)]">
-                    session_monitor
-                  </span>{" "}
-                  s_9k2f
-                </div>
-                <div>
-                  {"  "}⎿ <span className="text-[var(--phos)]">✓</span> turn-end
-                  · gate lint+test{" "}
-                  <span className="text-[var(--phos)]">passed</span>
-                </div>
-                <div className="mt-2 text-[var(--term-text)]">
-                  Done — commit staged behind the gate,
-                </div>
-                <div className="text-[var(--term-text)]">
-                  {"  "}awaiting your ack{" "}
-                  <span className="session-blink text-[var(--amber)]">▶</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 5b. Orchestration — fleet with receipts ─────────────── */}
-      <section className="border-t border-fd-border py-16">
-        <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-          <div className="min-w-0 max-w-full overflow-hidden border border-[var(--term-line)] bg-[var(--term-bg)] shadow-[0_24px_50px_-20px_rgba(6,24,16,0.55)]">
-            <div className="flex items-center gap-2.5 border-b border-[var(--term-line)] px-4 py-2.5">
-              <span
-                aria-hidden="true"
-                className="session-blink h-2 w-2 shrink-0 rounded-full bg-[var(--phos)]"
-              />
-              <span className="font-mono text-xs text-[var(--term-dim)]">
-                agentproto sessions tree
-              </span>
-            </div>
-            <div className="overflow-x-auto whitespace-nowrap p-5 font-mono text-[13px] leading-[1.9] text-[var(--term-dim)]">
-              <div className="min-w-[400px]">
-                <div>
-                  <span className="text-[var(--phos)]">●</span>{" "}
-                  <span className="text-[var(--phos)]">s_2del</span>{" "}
-                  <span className="text-[var(--term-text)]">supervisor</span> ·
-                  claude-code · &quot;ship the release&quot;
-                </div>
-                <div>
-                  ├─ <span className="text-[var(--phos)]">●</span> s_9k2f{" "}
-                  executor · codex · &quot;fix flaky test&quot; · gate{" "}
-                  <span className="text-[var(--phos)]">✓</span>
-                </div>
-                <div>
-                  ├─ <span className="text-[var(--phos)]">●</span> s_x1a4{" "}
-                  executor · hermes/glm · &quot;lint sweep&quot; · gate{" "}
-                  <span className="text-[var(--phos)]">✓</span>
-                </div>
-                <div>
-                  └─ <span className="session-blink text-[var(--phos)]">●</span>{" "}
-                  s_p8c3 executor · hermes/glm · &quot;changelog&quot; ·{" "}
-                  <span className="text-[var(--term-text)]">running</span>
-                </div>
-                <div className="mt-2">
-                  fan-in: <span className="text-[var(--term-text)]">waiting on 1 of 3</span>
-                </div>
-                <div>
-                  cron: <span className="text-[var(--term-text)]">nightly-audit</span>{" "}
-                  in 6h 12m
-                </div>
-              </div>
-            </div>
-          </div>
+        <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
           <div>
             <SectionLabel>orchestration</SectionLabel>
             <h2 className="mt-4 mb-3 font-serif text-3xl font-bold tracking-tight text-balance">
-              From one agent to a fleet — without losing the plot
+              One agent can manage the others
             </h2>
-            <p className="mb-5 max-w-lg leading-relaxed text-fd-muted-foreground">
-              The whole tree is real, visible sessions — who spawned whom,
-              what each one costs, which gate it&apos;s behind.
+            <p className="mb-6 max-w-lg leading-relaxed text-fd-muted-foreground">
+              agentproto plugs into the agent you already use, as tools.
+              Ask Claude Code to spin up a Codex session for a fix — or
+              three cheap open-model sessions for the grunt work — and the
+              whole tree is real, visible sessions: who spawned whom, what
+              each one costs, which gate it&apos;s behind. That&apos;s a
+              team, run from your prompt.
             </p>
-            <ul className="space-y-4">
+            <ul className="mb-6 space-y-4">
               <li className="border-l-2 border-fd-primary pl-5">
                 <p className="font-medium">Roles keep delegation sane</p>
                 <p className="text-sm leading-relaxed text-fd-muted-foreground">
@@ -381,110 +306,82 @@ agentproto mcp-bridge`}</code>
                 <p className="text-sm leading-relaxed text-fd-muted-foreground">
                   Ordered stages of concurrent steps, output validated
                   against a schema, per-run cost ceilings — scheduled
-                  nightly if you want. It runs whether you&apos;re there or
-                  not.
+                  nightly if you want. It runs whether you&apos;re there
+                  or not.
                 </p>
               </li>
             </ul>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 6. What it is ───────────────────────────────────────── */}
-      <section className="border-t border-fd-border py-16">
-        <div className="grid gap-10 md:grid-cols-3">
-          <div className="border-t-2 border-fd-primary pt-5">
-            <h2 className="mb-2 font-serif text-xl font-bold">
-              Run them all the same way
-            </h2>
-            <p className="text-sm leading-relaxed text-fd-muted-foreground">
-              Start, message, watch, and stop any agent with the same
-              commands — Claude Code, Codex, Hermes, opencode, Mastra. Nine
-              adapters today. No more memorizing five different CLIs.
-            </p>
-          </div>
-          <div className="border-t-2 border-fd-primary pt-5">
-            <h2 className="mb-2 font-serif text-xl font-bold">
-              Work checked before it lands
-            </h2>
-            <p className="text-sm leading-relaxed text-fd-muted-foreground">
-              Attach a check — your tests, or a stronger model reviewing the
-              change — and it runs each time the agent finishes. Commits wait
-              for the check and your OK, even after you close your laptop.
-              No more merging code nobody read.
-            </p>
-          </div>
-          <div className="border-t-2 border-fd-primary pt-5">
-            <h2 className="mb-2 font-serif text-xl font-bold">
-              Keep the tools you have
-            </h2>
-            <p className="text-sm leading-relaxed text-fd-muted-foreground">
-              It drives the agent CLIs you already use — nothing to rewrite,
-              no framework to adopt. And because everything is exposed over
-              MCP, your agents can even run and check other agents. Nothing
-              locks you in.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 7. Adapters ─────────────────────────────────────────── */}
-      <section className="border-t border-fd-border py-16">
-        <SectionLabel>nine adapters, live today</SectionLabel>
-        <h2 className="mt-4 mb-3 font-serif text-3xl font-bold tracking-tight text-balance">
-          Mix vendors. Route by cost.
-        </h2>
-        <p className="mb-6 max-w-2xl leading-relaxed text-fd-muted-foreground">
-          Claude for the plan, Codex for the refactor, a cheap open model
-          for the mechanical work — same commands, same list, same checks.
-          When a better or cheaper model ships, it&apos;s an adapter away,
-          not a migration. No vendor decides what your fleet looks like.
-        </p>
-        <ul className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
-          {ADAPTERS.map(adapter => (
-            <li
-              key={adapter.name}
-              className="flex items-center justify-between gap-2 border border-fd-border bg-fd-card px-3 py-2.5"
-            >
-              <span className="flex min-w-0 items-center gap-2.5">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={adapter.icon}
-                  alt=""
-                  aria-hidden="true"
-                  width={16}
-                  height={16}
-                  className={
-                    "h-4 w-4 shrink-0 object-contain" +
-                    (adapter.mono ? " dark:invert" : "")
-                  }
-                />
-                <span className="truncate font-mono text-sm">
-                  {adapter.name}
-                </span>
-              </span>
-              <span className="font-mono text-[10px] uppercase tracking-wide text-fd-muted-foreground">
-                {adapter.kind}
-              </span>
-            </li>
-          ))}
-          <li>
             <a
-              href="https://github.com/agentproto/ts"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block border border-dashed border-fd-border bg-fd-card px-3 py-2.5 transition-colors hover:border-fd-primary/50"
+              href="https://cli.agentproto.sh/docs/guides/mcp-in-coding-cli"
+              className="font-medium text-fd-primary hover:underline"
             >
-              <span className="font-mono text-sm text-fd-primary">yours?</span>
-              <span className="mt-0.5 block font-mono text-[10px] uppercase tracking-wide text-fd-muted-foreground">
-                Write an adapter
-              </span>
+              Full guide: MCP inside coding CLIs →
             </a>
-          </li>
-        </ul>
+          </div>
+          <div className="min-w-0">
+            <div className="max-w-full overflow-hidden border border-[var(--term-line)] bg-[var(--term-bg)] shadow-[0_24px_50px_-20px_rgba(6,24,16,0.55)]">
+              <div className="flex items-center gap-2.5 border-b border-[var(--term-line)] px-4 py-2.5">
+                <span
+                  aria-hidden="true"
+                  className="session-blink h-2 w-2 shrink-0 rounded-full bg-[var(--phos)]"
+                />
+                <span className="font-mono text-xs text-[var(--term-dim)]">
+                  agentproto sessions tree
+                </span>
+              </div>
+              <div className="overflow-x-auto whitespace-nowrap p-5 font-mono text-[13px] leading-[1.9] text-[var(--term-dim)]">
+                <div className="min-w-[400px]">
+                  <div>
+                    <span className="text-[var(--phos)]">●</span>{" "}
+                    <span className="text-[var(--phos)]">s_2del</span>{" "}
+                    <span className="text-[var(--term-text)]">supervisor</span>{" "}
+                    · claude-code · &quot;ship the release&quot;
+                  </div>
+                  <div>
+                    ├─ <span className="text-[var(--phos)]">●</span> s_9k2f{" "}
+                    executor · codex · &quot;fix flaky test&quot; · gate{" "}
+                    <span className="text-[var(--phos)]">✓</span>
+                  </div>
+                  <div>
+                    ├─ <span className="text-[var(--phos)]">●</span> s_x1a4{" "}
+                    executor · hermes/glm · &quot;lint sweep&quot; · gate{" "}
+                    <span className="text-[var(--phos)]">✓</span>
+                  </div>
+                  <div>
+                    └─{" "}
+                    <span className="session-blink text-[var(--phos)]">●</span>{" "}
+                    s_p8c3 executor · hermes/glm · &quot;changelog&quot; ·{" "}
+                    <span className="text-[var(--term-text)]">running</span>
+                  </div>
+                  <div className="mt-2">
+                    fan-in:{" "}
+                    <span className="text-[var(--term-text)]">
+                      waiting on 1 of 3
+                    </span>
+                  </div>
+                  <div>
+                    cron:{" "}
+                    <span className="text-[var(--term-text)]">
+                      nightly-audit
+                    </span>{" "}
+                    in 6h 12m
+                  </div>
+                </div>
+              </div>
+            </div>
+            <pre className="mt-4 max-w-full overflow-x-auto border border-fd-border bg-fd-card p-4 font-mono text-[12.5px] leading-relaxed">
+              <code>{`# Claude Code (native HTTP transport)
+claude mcp add --transport http agentproto \\
+  http://127.0.0.1:18790/mcp
+
+# Codex, Cursor, Claude Desktop (stdio)
+agentproto mcp-bridge`}</code>
+            </pre>
+          </div>
+        </div>
       </section>
 
-      {/* ── 8. Supervision, on stage ────────────────────────────── */}
+      {/* ── 7. Supervision, on stage ────────────────────────────── */}
       <section className="border-t border-fd-border py-16">
         <div className="grid gap-10 lg:grid-cols-[1fr_1fr] lg:items-center">
           <div>
@@ -550,7 +447,7 @@ agentproto mcp-bridge`}</code>
         </div>
       </section>
 
-      {/* ── 9. Deep dives ───────────────────────────────────────── */}
+      {/* ── 8. Deep dives ───────────────────────────────────────── */}
       <section className="border-t border-fd-border py-16">
         <div className="mb-6 flex flex-wrap items-baseline justify-between gap-2">
           <SectionLabel>Deep dives — read the code</SectionLabel>
