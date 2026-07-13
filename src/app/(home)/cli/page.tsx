@@ -10,16 +10,22 @@ export const metadata: Metadata = {
     "Run Claude Code, Codex, and any other coding agent in the background, see them all in one place — terminal or web — and check their work before it lands.",
 }
 
-const ADAPTERS = [
-  { name: "Claude Code", kind: "cli" },
-  { name: "Claude SDK", kind: "sdk" },
-  { name: "Codex", kind: "cli" },
-  { name: "Hermes", kind: "cli" },
-  { name: "opencode", kind: "cli" },
-  { name: "Mastra Code", kind: "cli" },
-  { name: "Mastra Agent", kind: "sdk" },
-  { name: "OpenClaw", kind: "cli" },
-  { name: "Browser", kind: "target" },
+const ADAPTERS: {
+  name: string
+  kind: string
+  icon: string
+  /** currentColor SVG rendered black — invert it in dark mode */
+  mono?: boolean
+}[] = [
+  { name: "Claude Code", kind: "cli", icon: "/icons/adapters/claude.svg" },
+  { name: "Claude SDK", kind: "sdk", icon: "/icons/adapters/anthropic.svg", mono: true },
+  { name: "Codex", kind: "cli", icon: "/icons/adapters/openai.svg", mono: true },
+  { name: "Hermes", kind: "cli", icon: "/icons/adapters/hermes.svg", mono: true },
+  { name: "opencode", kind: "cli", icon: "/icons/adapters/opencode.svg", mono: true },
+  { name: "Mastra Code", kind: "cli", icon: "/icons/adapters/mastra.svg", mono: true },
+  { name: "Mastra Agent", kind: "sdk", icon: "/icons/adapters/mastra.svg", mono: true },
+  { name: "OpenClaw", kind: "cli", icon: "/icons/adapters/openclaw.png" },
+  { name: "Browser", kind: "target", icon: "/icons/adapters/browser.svg", mono: true },
 ]
 
 const DEEP_DIVES = [
@@ -440,7 +446,23 @@ agentproto mcp-bridge`}</code>
               key={adapter.name}
               className="flex items-center justify-between gap-2 border border-fd-border bg-fd-card px-3 py-2.5"
             >
-              <span className="font-mono text-sm">{adapter.name}</span>
+              <span className="flex min-w-0 items-center gap-2.5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={adapter.icon}
+                  alt=""
+                  aria-hidden="true"
+                  width={16}
+                  height={16}
+                  className={
+                    "h-4 w-4 shrink-0 object-contain" +
+                    (adapter.mono ? " dark:invert" : "")
+                  }
+                />
+                <span className="truncate font-mono text-sm">
+                  {adapter.name}
+                </span>
+              </span>
               <span className="font-mono text-[10px] uppercase tracking-wide text-fd-muted-foreground">
                 {adapter.kind}
               </span>
