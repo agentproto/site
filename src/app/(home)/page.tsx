@@ -20,15 +20,18 @@ const PROOF = [
     quote:
       "I'm not convinced there is any hope for a productive, long-term, burnout-free parallel agent workflow.",
     attribution: "grim_io, HN",
+    response: "The burnout is the watching. Attach checks; stop watching.",
   },
   {
     quote: "Keep agents simple, push orchestration to the outside.",
     attribution: "IssueConnect7471, r/ClaudeAI (built a tmux+Redis watchdog)",
+    response: "agentproto is the outside — no tmux+Redis to hand-roll.",
   },
   {
     quote:
       "Today I have Claude Code and Codex CLI and Codex Web running, often in parallel",
     attribution: "simonw, HN",
+    response: "Three agents, three windows. One list instead.",
   },
 ]
 
@@ -130,12 +133,15 @@ export default function HomePage(): React.ReactElement {
 
       {/* ── 2. Proof strip ──────────────────────────────────────── */}
       <section className="border-t border-fd-border py-14">
-        <SectionLabel>People are hand-rolling this today.</SectionLabel>
+        <SectionLabel>Heard on HN &amp; Reddit — answered here.</SectionLabel>
         <div className="mt-8 grid gap-y-8 md:grid-cols-3 md:divide-x md:divide-fd-border md:gap-y-0">
           {PROOF.map((p, i) => (
             <figure
               key={p.attribution}
-              className={i === 0 ? "md:pr-8" : i === 1 ? "md:px-8" : "md:pl-8"}
+              className={
+                (i === 0 ? "md:pr-8" : i === 1 ? "md:px-8" : "md:pl-8") +
+                " flex flex-col"
+              }
             >
               <blockquote className="font-serif text-[17px] italic leading-snug text-fd-foreground">
                 &ldquo;{p.quote}&rdquo;
@@ -143,6 +149,9 @@ export default function HomePage(): React.ReactElement {
               <figcaption className="mt-3 font-mono text-xs text-fd-muted-foreground">
                 — {p.attribution}
               </figcaption>
+              <p className="mt-4 border-l-2 border-fd-primary pl-3 font-mono text-xs leading-relaxed text-fd-foreground md:mt-auto md:pt-4">
+                {p.response}
+              </p>
             </figure>
           ))}
         </div>
