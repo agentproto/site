@@ -15,26 +15,6 @@ const ADAPTERS = [
   { name: "Browser", kind: "target" },
 ]
 
-const PROOF = [
-  {
-    quote:
-      "I'm not convinced there is any hope for a productive, long-term, burnout-free parallel agent workflow.",
-    attribution: "grim_io, HN",
-    response: "The burnout is the watching. Attach checks; stop watching.",
-  },
-  {
-    quote: "Keep agents simple, push orchestration to the outside.",
-    attribution: "IssueConnect7471, r/ClaudeAI (built a tmux+Redis watchdog)",
-    response: "agentproto is the outside — no tmux+Redis to hand-roll.",
-  },
-  {
-    quote:
-      "Today I have Claude Code and Codex CLI and Codex Web running, often in parallel",
-    attribution: "simonw, HN",
-    response: "Three agents, three windows. One list instead.",
-  },
-]
-
 const DEEP_DIVES = [
   {
     step: "01",
@@ -113,7 +93,7 @@ export default function HomePage(): React.ReactElement {
               href="https://cli.agentproto.sh"
               className="bg-fd-foreground px-5 py-2 font-medium text-fd-background transition-opacity hover:opacity-85"
             >
-              Start the daemon
+              Get started
             </a>
             <a
               href="https://github.com/agentproto/ts"
@@ -131,29 +111,33 @@ export default function HomePage(): React.ReactElement {
         <SessionBoard />
       </section>
 
-      {/* ── 2. Proof strip ──────────────────────────────────────── */}
+      {/* ── 2. Problem → solution ───────────────────────────────── */}
       <section className="border-t border-fd-border py-14">
-        <SectionLabel>Heard on HN &amp; Reddit — answered here.</SectionLabel>
-        <div className="mt-8 grid gap-y-8 md:grid-cols-3 md:divide-x md:divide-fd-border md:gap-y-0">
-          {PROOF.map((p, i) => (
-            <figure
-              key={p.attribution}
-              className={
-                (i === 0 ? "md:pr-8" : i === 1 ? "md:px-8" : "md:pl-8") +
-                " flex flex-col"
-              }
-            >
-              <blockquote className="font-serif text-[17px] italic leading-snug text-fd-foreground">
-                &ldquo;{p.quote}&rdquo;
-              </blockquote>
-              <figcaption className="mt-3 font-mono text-xs text-fd-muted-foreground">
-                — {p.attribution}
-              </figcaption>
-              <p className="mt-4 border-l-2 border-fd-primary pl-3 font-mono text-xs leading-relaxed text-fd-foreground md:mt-auto md:pt-4">
-                {p.response}
-              </p>
-            </figure>
-          ))}
+        <SectionLabel>the problem</SectionLabel>
+        <h2 className="mt-4 mb-8 font-serif text-3xl font-bold tracking-tight text-balance">
+          Coding agents made you the babysitter.
+        </h2>
+        <div className="grid gap-8 md:grid-cols-2 md:gap-12">
+          <div>
+            <p className="mb-4 font-mono text-xs uppercase tracking-[0.14em] text-fd-muted-foreground">
+              without agentproto
+            </p>
+            <ul className="space-y-3 text-[15px] leading-relaxed text-fd-muted-foreground">
+              <li>One terminal per agent — you rotate between them all day.</li>
+              <li>You read every diff yourself. Or nobody does.</li>
+              <li>Close the laptop and everything dies mid-task.</li>
+            </ul>
+          </div>
+          <div className="border-l-2 border-fd-primary pl-8 md:pl-12">
+            <p className="mb-4 font-mono text-xs uppercase tracking-[0.14em] text-fd-primary">
+              with agentproto
+            </p>
+            <ul className="space-y-3 text-[15px] leading-relaxed text-fd-foreground">
+              <li>Agents run in the background — one list shows them all.</li>
+              <li>Your tests or a reviewer model check every step.</li>
+              <li>Commits wait for a green check and your OK. Work continues without you.</li>
+            </ul>
+          </div>
         </div>
       </section>
 
@@ -166,9 +150,9 @@ export default function HomePage(): React.ReactElement {
               Three commands to a running, watchable agent
             </h2>
             <p className="max-w-md leading-relaxed text-fd-muted-foreground">
-              Install, serve, start a session. Then gate it: attach a
-              policy to any session&apos;s turn-end and stage the commit
-              behind a human ack.
+              Install, start, delegate. The session shows up in one list
+              from the first second. Attach a check to it and walk away —
+              the work continues, watched and gated, without you.
             </p>
             <Link
               href="/deep-dives"
@@ -185,15 +169,17 @@ export default function HomePage(): React.ReactElement {
       <section className="border-t border-fd-border py-16">
         <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div>
-            <SectionLabel>or zero new commands</SectionLabel>
+            <SectionLabel>your agent, promoted</SectionLabel>
             <h2 className="mt-4 mb-3 font-serif text-3xl font-bold tracking-tight text-balance">
-              Claude Code can drive the daemon — from inside its own loop
+              One agent can manage the others
             </h2>
             <p className="mb-5 max-w-lg leading-relaxed text-fd-muted-foreground">
-              The daemon is an MCP server. Register it once and the agent
-              you already use gains agentproto&apos;s tools: it spawns real
-              sessions on any adapter — observable, gateable, killable —
-              instead of invisible native subagents.
+              agentproto plugs into the agent you already use, as tools.
+              Ask Claude Code to spin up a Codex session for a fix — or
+              three cheap open-model sessions for the grunt work — and
+              every one of them shows up in the same list, gated by the
+              same checks. Visible child sessions, not invisible
+              subagents. That&apos;s a team, run from your prompt.
             </p>
             <pre className="mb-4 max-w-lg overflow-x-auto border border-fd-border bg-fd-card p-4 font-mono text-[12.5px] leading-relaxed">
               <code>{`# Claude Code (native HTTP transport)
@@ -299,7 +285,16 @@ agentproto mcp-bridge`}</code>
 
       {/* ── 5. Adapters ─────────────────────────────────────────── */}
       <section className="border-t border-fd-border py-16">
-        <SectionLabel>Adapters — live today</SectionLabel>
+        <SectionLabel>nine adapters, live today</SectionLabel>
+        <h2 className="mt-4 mb-3 font-serif text-3xl font-bold tracking-tight text-balance">
+          Mix vendors. Route by cost.
+        </h2>
+        <p className="mb-6 max-w-2xl leading-relaxed text-fd-muted-foreground">
+          Claude for the plan, Codex for the refactor, a cheap open model
+          for the mechanical work — same commands, same list, same checks.
+          When a better or cheaper model ships, it&apos;s an adapter away,
+          not a migration. No vendor decides what your fleet looks like.
+        </p>
         <ul className="mt-6 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
           {ADAPTERS.map(adapter => (
             <li
@@ -453,11 +448,17 @@ agentproto mcp-bridge`}</code>
         <div className="flex flex-wrap items-center justify-between gap-6 border border-fd-border bg-fd-card px-6 py-6 sm:px-8">
           <div className="min-w-0">
             <p className="font-mono text-xs uppercase tracking-[0.14em] text-fd-muted-foreground">
-              built on a written standard
+              the bigger picture
             </p>
             <p className="mt-2 max-w-xl font-serif text-lg font-bold leading-snug">
-              Every contract the daemon implements is specified in the open —
-              the AIP family, AIP-1 through AIP-52.
+              Under the daemon sits an open standard: everything an agent is
+              — tools, skills, knowledge, workflows, policies — as plain
+              files with declared contracts.
+            </p>
+            <p className="mt-2 max-w-xl text-sm leading-relaxed text-fd-muted-foreground">
+              Files with contracts (AIP-1 … AIP-52) mean any runtime can load
+              your components — and agents can read, write, and improve
+              their own.
             </p>
           </div>
           <Link
