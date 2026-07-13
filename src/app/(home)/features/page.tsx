@@ -50,7 +50,14 @@ export default function FeaturesPage(): React.ReactElement {
   return (
     <main className="container mx-auto max-w-4xl px-6 py-12">
       <header className="mb-10">
-        <h1 className="text-3xl font-bold mb-3">
+        <p className="mb-4 font-mono text-xs uppercase tracking-[0.14em] text-fd-muted-foreground">
+          <span
+            aria-hidden="true"
+            className="mr-3 inline-block h-0.5 w-6 translate-y-[-3px] bg-fd-primary align-middle"
+          />
+          errata, in advance
+        </p>
+        <h1 className="mb-3 font-serif text-3xl font-bold tracking-tight sm:text-4xl">
           What&apos;s live today — and what isn&apos;t yet
         </h1>
         <p className="text-fd-muted-foreground leading-relaxed">
@@ -63,12 +70,12 @@ export default function FeaturesPage(): React.ReactElement {
       </header>
 
       <section className="mb-12">
-        <h2 className="text-xl font-semibold mb-4">
+        <h2 className="mb-4 font-serif text-xl font-bold">
           Tier 1 — live and working
         </h2>
         <ul className="space-y-4">
           {TIER1.map(f => (
-            <li key={f.title} className="rounded-md border border-fd-border p-4">
+            <li key={f.title} className="border border-fd-border bg-fd-card p-4">
               <h3 className="font-semibold mb-1">{f.title}</h3>
               <p className="text-sm text-fd-muted-foreground leading-relaxed">
                 {f.body}
@@ -79,7 +86,7 @@ export default function FeaturesPage(): React.ReactElement {
       </section>
 
       <section className="mb-12">
-        <h2 className="text-xl font-semibold mb-3">
+        <h2 className="mb-3 font-serif text-xl font-bold">
           Tier 2 — the AIP spec family (roadmap)
         </h2>
         <p className="text-fd-muted-foreground leading-relaxed mb-3">
@@ -97,7 +104,7 @@ export default function FeaturesPage(): React.ReactElement {
       </section>
 
       <section>
-        <h2 className="text-xl font-semibold mb-3">Compare</h2>
+        <h2 className="mb-3 font-serif text-xl font-bold">Compare</h2>
         <p className="text-fd-muted-foreground leading-relaxed">
           Wondering how this relates to Claude Squad, Conductor, or Agent
           Farm?{" "}

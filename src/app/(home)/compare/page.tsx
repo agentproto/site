@@ -1,12 +1,13 @@
 export const metadata = {
-  title: "agentproto vs Claude Squad, Conductor, Agent Farm | agentproto",
+  title: "agentproto vs Paseo, Claude Squad, Conductor, Agent Farm | agentproto",
   description:
-    "An honest comparison: interactive cockpits for parallel coding-agent sessions vs. a daemon with a programmatic lifecycle and supervision primitives.",
+    "An honest comparison: steering interfaces and cockpits for parallel coding-agent sessions vs. a daemon with a programmatic lifecycle and supervision primitives.",
 }
 
 interface Row {
   dimension: string
   agentproto: string
+  paseo: string
   claudeSquad: string
   conductor: string
   agentFarm: string
@@ -17,6 +18,8 @@ const ROWS: Row[] = [
     dimension: "Agents supported",
     agentproto:
       "Claude Code, Codex, Hermes, opencode, Mastra (Code + Agent), claude-sdk (Anthropic/Moonshot/OpenRouter), OpenClaw, browser-as-agent — uniform AIP-45 manifests",
+    paseo:
+      "Claude Code, Codex, Copilot, OpenCode, Pi — plus custom providers (custom binaries, ACP agents, Anthropic-compatible endpoints)",
     claudeSquad: "Claude Code, Codex, Gemini, Aider, other local agents",
     conductor: "Claude Code, Codex, Cursor",
     agentFarm: "Claude Code only (by design)",
@@ -25,6 +28,8 @@ const ROWS: Row[] = [
     dimension: "Interface",
     agentproto:
       "Daemon with CLI + HTTP + MCP surfaces; scriptable from code, another agent, or cron — no terminal required",
+    paseo:
+      "Daemon + desktop, iOS/Android, web, and CLI clients; voice control — built for a human steering from any device",
     claudeSquad: "Interactive terminal TUI (human sits in it)",
     conductor: "Mac desktop app (human sits in it)",
     agentFarm: "Python script / batch CLI",
@@ -33,6 +38,7 @@ const ROWS: Row[] = [
     dimension: "Isolation",
     agentproto:
       "Daemon-tracked sessions; git-worktree isolation; sandbox provider family landing (local shipped, e2b microVM in progress)",
+    paseo: "Git worktree per run (--worktree); official Docker image; remote daemon (--host)",
     claudeSquad: "tmux session per agent + git worktree per branch",
     conductor: "Isolated workspace per agent",
     agentFarm: "tmux panes + lock-based file coordination",
@@ -41,6 +47,8 @@ const ROWS: Row[] = [
     dimension: "Programmatic API",
     agentproto:
       "Yes — spawn/prompt/monitor/kill/export over MCP or HTTP; fan-in monitor; usage/cost introspection",
+    paseo:
+      "Partial — CLI verbs (run/ls/attach/send) + WebSocket API; primarily driven from its own clients",
     claudeSquad: "No — TUI app",
     conductor: "No — desktop app",
     agentFarm: "Partial — configurable script, not a long-lived API",
@@ -49,6 +57,8 @@ const ROWS: Row[] = [
     dimension: "Durable supervision / policy gates",
     agentproto:
       "Yes — shell or LLM-judge gate on turn-end, event bus, commit gated on human ack; survives client disconnect",
+    paseo:
+      "Partial — remote approval of agents' own permission prompts, plus a Ralph-loop skill with optional verifier; no daemon-side turn-end gates or commit staging",
     claudeSquad: "No — human watches the TUI",
     conductor: "No — human reviews in the app",
     agentFarm: "Partial — workload watchdog (auto-restart), not per-turn gates",
@@ -57,6 +67,8 @@ const ROWS: Row[] = [
     dimension: "Nested orchestration",
     agentproto:
       "Yes — scoped sub-gateways, executor/supervisor role gating, depth/children caps",
+    paseo:
+      "Partial — handoff/committee/advisor skills between agents; no role gating or depth caps",
     claudeSquad: "No",
     conductor: "No",
     agentFarm: "Partial — fans one workload across N agents",
@@ -65,13 +77,36 @@ const ROWS: Row[] = [
     dimension: "MCP surface",
     agentproto:
       "Yes — the daemon is an MCP server (~90 tools); agents can mount external MCP servers",
+    paseo:
+      "Yes — daemon MCP server (opt-in config); drivable from Claude Desktop/Code or any MCP client",
     claudeSquad: "No",
     conductor: "No",
     agentFarm: "No",
   },
   {
+    dimension: "Your own tools, shared with every agent",
+    agentproto:
+      "Yes — author a tool once (TOOL contract + DRIVER implementation), the daemon serves it over MCP to every agent; external MCP servers can be imported and handed to any agent at spawn",
+    paseo:
+      "No — the daemon injects only its own control tools (agents, terminals, schedules, permissions) into agents",
+    claudeSquad: "No",
+    conductor: "No",
+    agentFarm: "No",
+  },
+  {
+    dimension: "Scheduled / recurring runs",
+    agentproto:
+      "Yes — workflows (staged concurrency, schema-validated outputs, cost ceilings) + durable cron on the daemon",
+    paseo:
+      "Yes — recurring schedules on an agent, with run history, manageable over MCP",
+    claudeSquad: "No",
+    conductor: "No",
+    agentFarm: "Partial — batch runs, not scheduled",
+  },
+  {
     dimension: "License / platform",
-    agentproto: "MIT — cross-platform daemon + CLI (macOS + Linux verified)",
+    agentproto: "Apache-2.0 — cross-platform daemon + CLI (macOS + Linux verified)",
+    paseo: "AGPL-3.0 — cross-platform, desktop + mobile apps; solo-maintained",
     claudeSquad: "AGPL-3.0 — cross-platform TUI (requires tmux + gh)",
     conductor: "Closed source — macOS only",
     agentFarm: "MIT — cross-platform (Python 3.13+, tmux, Claude Code)",
@@ -89,12 +124,38 @@ export default function ComparePage(): React.ReactElement {
   return (
     <main className="container mx-auto max-w-5xl px-6 py-12">
       <header className="mb-10">
-        <h1 className="text-3xl font-bold mb-3">
-          agentproto vs Claude Squad, Conductor, Agent Farm
+        <p className="mb-4 font-mono text-xs uppercase tracking-[0.14em] text-fd-muted-foreground">
+          <span
+            aria-hidden="true"
+            className="mr-3 inline-block h-0.5 w-6 translate-y-[-3px] bg-fd-primary align-middle"
+          />
+          the honest comparison
+        </p>
+        <h1 className="mb-3 font-serif text-3xl font-bold tracking-tight sm:text-4xl">
+          agentproto vs Paseo, Claude Squad, Conductor, Agent Farm
         </h1>
+        <p className="mb-4 text-fd-muted-foreground leading-relaxed">
+          The honest framing first.{" "}
+          <a
+            href="https://paseo.sh"
+            className="text-fd-primary"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Paseo
+          </a>{" "}
+          is the one real shape-competitor here: also a local daemon, also
+          multi-provider, with polished desktop and mobile clients and voice
+          control. Where we differ is the center of gravity — Paseo is built
+          around a human <em>steering</em> agents from any device;
+          agentproto is built around <em>supervision</em>: per-turn policy
+          gates, commits staged behind a human ack, role-gated nested
+          orchestration, and an open spec family underneath. Apache-2.0 vs
+          AGPL matters too if you want to embed the daemon in your own
+          product.
+        </p>
         <p className="text-fd-muted-foreground leading-relaxed">
-          The honest framing first: these four tools are not really
-          competitors.{" "}
+          The other three are not really competitors.{" "}
           <a
             href="https://github.com/smtg-ai/claude-squad"
             className="text-fd-primary"
@@ -136,6 +197,7 @@ export default function ComparePage(): React.ReactElement {
             <tr className="text-left">
               <th className={CELL}>Dimension</th>
               <th className={CELL}>agentproto</th>
+              <th className={CELL}>Paseo</th>
               <th className={CELL}>Claude Squad</th>
               <th className={CELL}>Conductor</th>
               <th className={CELL}>Agent Farm</th>
@@ -146,6 +208,7 @@ export default function ComparePage(): React.ReactElement {
               <tr key={row.dimension}>
                 <td className={`${CELL} font-medium`}>{row.dimension}</td>
                 <td className={CELL}>{row.agentproto}</td>
+                <td className={CELL}>{row.paseo}</td>
                 <td className={CELL}>{row.claudeSquad}</td>
                 <td className={CELL}>{row.conductor}</td>
                 <td className={CELL}>{row.agentFarm}</td>
@@ -154,14 +217,19 @@ export default function ComparePage(): React.ReactElement {
           </tbody>
         </table>
         <p className="mt-2 text-xs text-fd-muted-foreground">
-          Facts sourced from each project&apos;s own page, 2026-07-07.
-          Corrections welcome — file an issue.
+          Facts sourced from each project&apos;s own page, 2026-07-07
+          (Paseo: 2026-07-13). Corrections welcome — file an issue.
         </p>
       </section>
 
       <section className="mb-12">
-        <h2 className="text-xl font-semibold mb-3">When to use which</h2>
+        <h2 className="mb-3 font-serif text-xl font-bold">When to use which</h2>
         <ul className="space-y-3 text-fd-muted-foreground leading-relaxed">
+          <li>
+            <strong className="text-fd-foreground">Paseo</strong> — you want
+            to steer agents from your phone or by voice, across desktop and
+            mobile, with a polished cross-device experience.
+          </li>
           <li>
             <strong className="text-fd-foreground">Claude Squad</strong> — you
             want a terminal cockpit for a handful of parallel sessions with
@@ -187,7 +255,7 @@ export default function ComparePage(): React.ReactElement {
       </section>
 
       <section>
-        <h2 className="text-xl font-semibold mb-3">They can compose</h2>
+        <h2 className="mb-3 font-serif text-xl font-bold">They can compose</h2>
         <p className="text-fd-muted-foreground leading-relaxed">
           agentproto does not replace the cockpits. A tool like Claude Squad
           or Conductor could mount the agentproto MCP server and get durable
