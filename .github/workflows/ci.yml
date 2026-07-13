@@ -20,7 +20,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Paper & Phosphor brand tokens are an identical copy in both
       # site repos (no shared package yet — the sites build standalone
@@ -57,7 +57,7 @@ jobs:
       # a standalone lockfile (see CI install step's --no-frozen-lockfile
       # comment for context).
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
 
