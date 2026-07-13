@@ -90,17 +90,17 @@ export default function HomePage(): React.ReactElement {
             <span aria-hidden="true" className="session-blink mr-2 text-fd-primary">
               ▍
             </span>
-            one daemon · any coding agent · real supervision
+            runs them · watches them · checks their work
           </p>
           <h1 className="mb-6 font-serif text-4xl font-bold leading-[1.07] tracking-tight text-balance sm:text-[3.4rem]">
-            One daemon runs every coding agent.{" "}
-            <em className="text-fd-primary">And actually supervises them.</em>
+            Let your coding agents work{" "}
+            <em className="text-fd-primary">without you watching.</em>
           </h1>
           <p className="mb-8 max-w-xl text-lg leading-relaxed text-fd-muted-foreground text-pretty">
-            Claude Code, Codex, Hermes, opencode, and Mastra get the same
-            start-stop-restart lifecycle, so you stop memorizing five
-            different CLIs. Then nest them, gate them behind policy, and
-            watch every run from one place.
+            agentproto runs Claude Code, Codex, and any other coding agent
+            in the background, shows them all in one place, and checks each
+            one&apos;s work — with your tests or a reviewer model — before
+            anything is committed. No more babysitting terminal windows.
           </p>
           <div className="mb-6">
             <CopyCommand command="npm i -g @agentproto/cli" />
@@ -122,7 +122,7 @@ export default function HomePage(): React.ReactElement {
             </a>
           </div>
           <p className="font-mono text-xs text-fd-muted-foreground">
-            9 adapters · MIT · npm <span className="text-fd-foreground">@agentproto/cli</span>
+            9 adapters · Apache-2.0 · npm <span className="text-fd-foreground">@agentproto/cli</span>
           </p>
         </div>
         <SessionBoard />
@@ -254,29 +254,35 @@ agentproto mcp-bridge`}</code>
       <section className="border-t border-fd-border py-16">
         <div className="grid gap-10 md:grid-cols-3">
           <div className="border-t-2 border-fd-primary pt-5">
-            <h2 className="mb-2 font-serif text-xl font-bold">One lifecycle</h2>
+            <h2 className="mb-2 font-serif text-xl font-bold">
+              Run them all the same way
+            </h2>
             <p className="text-sm leading-relaxed text-fd-muted-foreground">
-              The same start, prompt, monitor, and kill verbs across every
-              adapter. Stop memorizing five different CLIs — one daemon, one
-              interface, nine adapters today.
-            </p>
-          </div>
-          <div className="border-t-2 border-fd-primary pt-5">
-            <h2 className="mb-2 font-serif text-xl font-bold">Real supervision</h2>
-            <p className="text-sm leading-relaxed text-fd-muted-foreground">
-              Policy gates fire on turn-end — shell command or LLM judge. A
-              commit can be staged behind the gate and wait for an explicit
-              human ack. It all survives a client disconnect.
+              Start, message, watch, and stop any agent with the same
+              commands — Claude Code, Codex, Hermes, opencode, Mastra. Nine
+              adapters today. No more memorizing five different CLIs.
             </p>
           </div>
           <div className="border-t-2 border-fd-primary pt-5">
             <h2 className="mb-2 font-serif text-xl font-bold">
-              Composition, not a framework
+              Work checked before it lands
             </h2>
             <p className="text-sm leading-relaxed text-fd-muted-foreground">
-              Drives the CLIs you already use. The daemon is itself an MCP
-              server, and any spawned agent can mount any MCP server at spawn
-              time — including the daemon&rsquo;s own orchestration gateway.
+              Attach a check — your tests, or a stronger model reviewing the
+              change — and it runs each time the agent finishes. Commits wait
+              for the check and your OK, even after you close your laptop.
+              No more merging code nobody read.
+            </p>
+          </div>
+          <div className="border-t-2 border-fd-primary pt-5">
+            <h2 className="mb-2 font-serif text-xl font-bold">
+              Keep the tools you have
+            </h2>
+            <p className="text-sm leading-relaxed text-fd-muted-foreground">
+              It drives the agent CLIs you already use — nothing to rewrite,
+              no framework to adopt. And because everything is exposed over
+              MCP, your agents can even run and check other agents. Nothing
+              locks you in.
             </p>
           </div>
         </div>
@@ -322,10 +328,11 @@ agentproto mcp-bridge`}</code>
               A gate between your agents and your main branch
             </h2>
             <p className="mb-4 max-w-lg leading-relaxed text-fd-muted-foreground">
-              Every session turn-end can trigger a policy: a shell command
-              (lint, tests) or an LLM judge. The commit is staged behind the
-              gate and waits for your explicit ack — from any client, or
-              none. Close your laptop; the daemon keeps supervising.
+              Every time an agent finishes a step, a check you choose runs:
+              a shell command (lint, tests) or a stronger model acting as
+              reviewer. The commit waits behind that check for your explicit
+              OK — from any device, or none. Close your laptop; the checks
+              keep running.
             </p>
             <Link
               href="/features"
