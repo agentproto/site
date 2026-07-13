@@ -76,7 +76,8 @@ const ROWS: Row[] = [
     dimension: "MCP surface",
     agentproto:
       "Yes — the daemon is an MCP server (~90 tools); agents can mount external MCP servers",
-    paseo: "Yes — the daemon ships an MCP server",
+    paseo:
+      "Yes — daemon MCP server (opt-in config); drivable from Claude Desktop/Code or any MCP client",
     claudeSquad: "No",
     conductor: "No",
     agentFarm: "No",
