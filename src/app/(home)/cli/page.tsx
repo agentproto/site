@@ -298,6 +298,92 @@ agentproto mcp-bridge`}</code>
         </div>
       </section>
 
+      {/* ── 5b. Orchestration — fleet with receipts ─────────────── */}
+      <section className="border-t border-fd-border py-16">
+        <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+          <div className="min-w-0 max-w-full overflow-hidden border border-[var(--term-line)] bg-[var(--term-bg)] shadow-[0_24px_50px_-20px_rgba(6,24,16,0.55)]">
+            <div className="flex items-center gap-2.5 border-b border-[var(--term-line)] px-4 py-2.5">
+              <span
+                aria-hidden="true"
+                className="session-blink h-2 w-2 shrink-0 rounded-full bg-[var(--phos)]"
+              />
+              <span className="font-mono text-xs text-[var(--term-dim)]">
+                agentproto sessions tree
+              </span>
+            </div>
+            <div className="overflow-x-auto whitespace-nowrap p-5 font-mono text-[13px] leading-[1.9] text-[var(--term-dim)]">
+              <div className="min-w-[400px]">
+                <div>
+                  <span className="text-[var(--phos)]">●</span>{" "}
+                  <span className="text-[var(--phos)]">s_2del</span>{" "}
+                  <span className="text-[var(--term-text)]">supervisor</span> ·
+                  claude-code · &quot;ship the release&quot;
+                </div>
+                <div>
+                  ├─ <span className="text-[var(--phos)]">●</span> s_9k2f{" "}
+                  executor · codex · &quot;fix flaky test&quot; · gate{" "}
+                  <span className="text-[var(--phos)]">✓</span>
+                </div>
+                <div>
+                  ├─ <span className="text-[var(--phos)]">●</span> s_x1a4{" "}
+                  executor · hermes/glm · &quot;lint sweep&quot; · gate{" "}
+                  <span className="text-[var(--phos)]">✓</span>
+                </div>
+                <div>
+                  └─ <span className="session-blink text-[var(--phos)]">●</span>{" "}
+                  s_p8c3 executor · hermes/glm · &quot;changelog&quot; ·{" "}
+                  <span className="text-[var(--term-text)]">running</span>
+                </div>
+                <div className="mt-2">
+                  fan-in: <span className="text-[var(--term-text)]">waiting on 1 of 3</span>
+                </div>
+                <div>
+                  cron: <span className="text-[var(--term-text)]">nightly-audit</span>{" "}
+                  in 6h 12m
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <SectionLabel>orchestration</SectionLabel>
+            <h2 className="mt-4 mb-3 font-serif text-3xl font-bold tracking-tight text-balance">
+              From one agent to a fleet — without losing the plot
+            </h2>
+            <p className="mb-5 max-w-lg leading-relaxed text-fd-muted-foreground">
+              The whole tree is real, visible sessions — who spawned whom,
+              what each one costs, which gate it&apos;s behind.
+            </p>
+            <ul className="space-y-4">
+              <li className="border-l-2 border-fd-primary pl-5">
+                <p className="font-medium">Roles keep delegation sane</p>
+                <p className="text-sm leading-relaxed text-fd-muted-foreground">
+                  Executors do the work and can&apos;t spawn; supervisors
+                  delegate, with depth and children caps enforced by the
+                  daemon. No runaway agent pyramids.
+                </p>
+              </li>
+              <li className="border-l-2 border-fd-primary pl-5">
+                <p className="font-medium">One call waits on the whole fan-out</p>
+                <p className="text-sm leading-relaxed text-fd-muted-foreground">
+                  <code className="text-fd-foreground">sessions wait</code>{" "}
+                  blocks until any of N sessions finishes a step — no
+                  polling loops, in the CLI or over HTTP/MCP.
+                </p>
+              </li>
+              <li className="border-l-2 border-fd-primary pl-5">
+                <p className="font-medium">Workflows and cron, on the daemon</p>
+                <p className="text-sm leading-relaxed text-fd-muted-foreground">
+                  Ordered stages of concurrent steps, output validated
+                  against a schema, per-run cost ceilings — scheduled
+                  nightly if you want. It runs whether you&apos;re there or
+                  not.
+                </p>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
       {/* ── 6. What it is ───────────────────────────────────────── */}
       <section className="border-t border-fd-border py-16">
         <div className="grid gap-10 md:grid-cols-3">

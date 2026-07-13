@@ -71,7 +71,7 @@ const ROWS: Row[] = [
   },
   {
     dimension: "License / platform",
-    agentproto: "MIT — cross-platform daemon + CLI (macOS + Linux verified)",
+    agentproto: "Apache-2.0 — cross-platform daemon + CLI (macOS + Linux verified)",
     claudeSquad: "AGPL-3.0 — cross-platform TUI (requires tmux + gh)",
     conductor: "Closed source — macOS only",
     agentFarm: "MIT — cross-platform (Python 3.13+, tmux, Claude Code)",
@@ -89,7 +89,14 @@ export default function ComparePage(): React.ReactElement {
   return (
     <main className="container mx-auto max-w-5xl px-6 py-12">
       <header className="mb-10">
-        <h1 className="text-3xl font-bold mb-3">
+        <p className="mb-4 font-mono text-xs uppercase tracking-[0.14em] text-fd-muted-foreground">
+          <span
+            aria-hidden="true"
+            className="mr-3 inline-block h-0.5 w-6 translate-y-[-3px] bg-fd-primary align-middle"
+          />
+          the honest comparison
+        </p>
+        <h1 className="mb-3 font-serif text-3xl font-bold tracking-tight sm:text-4xl">
           agentproto vs Claude Squad, Conductor, Agent Farm
         </h1>
         <p className="text-fd-muted-foreground leading-relaxed">
@@ -160,7 +167,7 @@ export default function ComparePage(): React.ReactElement {
       </section>
 
       <section className="mb-12">
-        <h2 className="text-xl font-semibold mb-3">When to use which</h2>
+        <h2 className="mb-3 font-serif text-xl font-bold">When to use which</h2>
         <ul className="space-y-3 text-fd-muted-foreground leading-relaxed">
           <li>
             <strong className="text-fd-foreground">Claude Squad</strong> — you
@@ -187,7 +194,7 @@ export default function ComparePage(): React.ReactElement {
       </section>
 
       <section>
-        <h2 className="text-xl font-semibold mb-3">They can compose</h2>
+        <h2 className="mb-3 font-serif text-xl font-bold">They can compose</h2>
         <p className="text-fd-muted-foreground leading-relaxed">
           agentproto does not replace the cockpits. A tool like Claude Squad
           or Conductor could mount the agentproto MCP server and get durable
