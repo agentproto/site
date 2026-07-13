@@ -6,11 +6,7 @@ const NAV_LINKS: LinkItemType[] = [
   { text: "Compare", url: "/compare", external: false },
   { text: "Deep dives", url: "/deep-dives", external: false },
   { text: "Specs", url: "/docs", external: false },
-  {
-    text: "CLI",
-    url: "https://cli.agentproto.sh",
-    external: true,
-  },
+  { text: "CLI", url: "/cli", external: false },
   {
     text: "GitHub",
     url: "https://github.com/agentproto/ts",
