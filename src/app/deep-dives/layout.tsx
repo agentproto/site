@@ -21,8 +21,8 @@ export default function DeepDivesLayout({
       links={[
         { text: "Specs", url: "/docs", external: false },
         {
-          text: "CLI (cli.agentproto.sh)",
-          url: "https://cli.agentproto.sh",
+          text: "CLI — get started",
+          url: "https://cli.agentproto.sh/docs/getting-started",
           external: true,
         },
         {
