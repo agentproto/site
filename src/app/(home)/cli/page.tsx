@@ -12,16 +12,27 @@ export const metadata: Metadata = {
 
 const ADAPTERS: {
   name: string
-  icon: string
+  /** icon path — omit for adapters without a sourced asset yet (text-only chip) */
+  icon?: string
   /** currentColor SVG rendered black — invert it in dark mode */
   mono?: boolean
 }[] = [
   { name: "Claude Code", icon: "/icons/adapters/claude.svg" },
   { name: "Claude SDK", icon: "/icons/adapters/anthropic.svg", mono: true },
   { name: "Codex", icon: "/icons/adapters/openai.svg", mono: true },
+  { name: "Gemini" },
+  { name: "Grok" },
+  { name: "Antigravity" },
   { name: "Hermes", icon: "/icons/adapters/hermes.svg", mono: true },
   { name: "opencode", icon: "/icons/adapters/opencode.svg", mono: true },
+  { name: "pi" },
+  { name: "jcode" },
   { name: "Mastra Code", icon: "/icons/adapters/mastra.svg", mono: true },
+  {
+    name: "Mastra Code (in-process)",
+    icon: "/icons/adapters/mastra.svg",
+    mono: true,
+  },
   { name: "Mastra Agent", icon: "/icons/adapters/mastra.svg", mono: true },
   { name: "OpenClaw", icon: "/icons/adapters/openclaw.png" },
   { name: "Browser", icon: "/icons/adapters/browser.svg", mono: true },
@@ -116,7 +127,7 @@ export default function CliPage(): React.ReactElement {
             </a>
           </div>
           <p className="font-mono text-xs text-fd-muted-foreground">
-            9 adapters · Apache-2.0 · npm{" "}
+            14 agents + browser · Apache-2.0 · npm{" "}
             <span className="text-fd-foreground">@agentproto/cli</span>
           </p>
         </div>
@@ -141,18 +152,20 @@ export default function CliPage(): React.ReactElement {
               key={adapter.name}
               className="flex items-center gap-2.5 border border-fd-border bg-fd-card px-3 py-2"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={adapter.icon}
-                alt=""
-                aria-hidden="true"
-                width={16}
-                height={16}
-                className={
-                  "h-4 w-4 shrink-0 object-contain" +
-                  (adapter.mono ? " dark:invert" : "")
-                }
-              />
+              {adapter.icon && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={adapter.icon}
+                  alt=""
+                  aria-hidden="true"
+                  width={16}
+                  height={16}
+                  className={
+                    "h-4 w-4 shrink-0 object-contain" +
+                    (adapter.mono ? " dark:invert" : "")
+                  }
+                />
+              )}
               <span className="font-mono text-sm">{adapter.name}</span>
             </li>
           ))}
