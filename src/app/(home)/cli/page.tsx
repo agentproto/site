@@ -141,7 +141,9 @@ export default function CliPage(): React.ReactElement {
               key={adapter.name}
               className="flex items-center gap-2.5 border border-fd-border bg-fd-card px-3 py-2"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
+              {/* eslint-disable-next-line @next/next/no-img-element --
+                  static 16px vendor marks from /public; next/image adds a
+                  wrapper + optimizer round-trip for no gain at this size */}
               <img
                 src={adapter.icon}
                 alt=""
