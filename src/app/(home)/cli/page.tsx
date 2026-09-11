@@ -127,7 +127,7 @@ export default function CliPage(): React.ReactElement {
             </a>
           </div>
           <p className="font-mono text-xs text-fd-muted-foreground">
-            14 agents · Apache-2.0 · npm{" "}
+            14 agents + browser · Apache-2.0 · npm{" "}
             <span className="text-fd-foreground">@agentproto/cli</span>
           </p>
         </div>
