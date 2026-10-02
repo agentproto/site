@@ -2,10 +2,11 @@ import { HomeLayout } from "fumadocs-ui/layouts/home"
 import type { LinkItemType } from "fumadocs-ui/layouts/shared"
 
 const NAV_LINKS: LinkItemType[] = [
+  { text: "Get started", url: "/start", external: false },
   { text: "Features", url: "/features", external: false },
   { text: "Compare", url: "/compare", external: false },
   { text: "Deep dives", url: "/deep-dives", external: false },
-  { text: "Specs", url: "/docs", external: false },
+  { text: "Specs", url: "/specs", external: false },
   { text: "CLI", url: "/cli", external: false },
   {
     text: "GitHub",
@@ -15,7 +16,7 @@ const NAV_LINKS: LinkItemType[] = [
 ]
 
 /**
- * Wraps the landing pages (/, /features, /compare) in fumadocs-ui's
+ * Wraps the landing pages (/, /start, /specs, /features, /compare) in fumadocs-ui's
  * HomeLayout so they get the same nav bar, theme toggle, and mobile
  * menu as /docs — without a sidebar. The root layout still renders
  * the SiteFooter outside this layout.
