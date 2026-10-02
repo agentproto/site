@@ -181,7 +181,8 @@ serveTool(impl)`}</code>
           ))}
         </div>
         <p className="mt-6 font-mono text-xs text-fd-muted-foreground">
-          52 numbered specs, 8 layers ·{" "}
+          52 numbered specs, 8 layers — two already live (workflows,
+          routines) ·{" "}
           <Link href="/docs" className="text-fd-primary hover:underline">
             browse the registry →
           </Link>
@@ -271,7 +272,7 @@ agentproto serve`}</code>
           What&apos;s real vs. roadmap
         </h2>
         <p className="mb-4 max-w-2xl leading-relaxed text-fd-muted-foreground">
-          The tool/driver primitives, the CLI, nine agent adapters, and the
+          The tool/driver primitives, the CLI, fourteen agents, and the
           orchestration/supervision layer (nested orchestration, policy
           gates, fan-in monitoring, MCP composition) are live and used
           hands-on. The wider AIP spec family beyond that is an open

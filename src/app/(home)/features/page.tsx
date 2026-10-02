@@ -9,7 +9,7 @@ export const metadata = {
 const TIER1 = [
   {
     title: "One daemon + CLI over every adapter",
-    body: "agentproto <verb> — auth, daemon, install, run, chat, sessions, serve, tunnel, browser, mcp-bridge, onboard, cron, pack and more. Nine adapters ship today (Claude Code, Claude SDK with Anthropic/Moonshot/OpenRouter gateway modes, Codex, Hermes, opencode, Mastra Code + in-process, Mastra Agent, OpenClaw, browser-as-agent), each self-declaring its models and modes via an AIP-45 manifest.",
+    body: "agentproto <verb> — auth, daemon, install, run, chat, sessions, serve, tunnel, browser, mcp-bridge, onboard, cron, pack and more. Fourteen agents ship today (Claude Code, Claude SDK with Anthropic/Moonshot/OpenRouter gateway modes, Codex, Gemini, Grok, Antigravity, Hermes, opencode, pi, jcode, Mastra Code, Mastra Code in-process, Mastra Agent, OpenClaw) plus browser-as-agent, each self-declaring its models and modes via an AIP-45 manifest.",
   },
   {
     title: "Uniform agent lifecycle",
@@ -33,7 +33,7 @@ const TIER1 = [
   },
   {
     title: "MCP composition",
-    body: "The daemon is itself an MCP server (~90 tools), and any spawned agent can mount external MCP servers at spawn time — including the daemon's own orchestration gateway, scoped.",
+    body: "The daemon is itself an MCP server (~175 tools), and any spawned agent can mount external MCP servers at spawn time — including the daemon's own orchestration gateway, scoped.",
   },
   {
     title: "Terminals, browsers, tunnels, packs",
