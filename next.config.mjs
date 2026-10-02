@@ -11,6 +11,17 @@ const config = {
   experimental: {
     typedRoutes: true,
   },
+  async redirects() {
+    return [
+      // The home v3 protocol section + footer CTA link to /specs — the
+      // specs index itself lives at /docs (the AIP registry landing).
+      {
+        source: "/specs",
+        destination: "/docs",
+        permanent: false,
+      },
+    ]
+  },
 }
 
 export default withMDX(config)

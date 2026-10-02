@@ -22,10 +22,12 @@
  */
 
 import { existsSync } from "node:fs"
-import { mkdir, rm, cp, stat } from "node:fs/promises"
+import { mkdir, rm, cp, stat, readdir, readFile } from "node:fs/promises"
 import { execFileSync } from "node:child_process"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
+import { compile } from "@mdx-js/mdx"
+import YAML from "yaml"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, "..")
@@ -88,12 +90,97 @@ async function syncFromGit() {
   await cp(CACHE_SPECS, TARGET_DIR, { recursive: true })
 }
 
+// Strip the `---\n...\n---\n` frontmatter block before handing a file to
+// the raw MDX compiler — frontmatter is YAML, not MDX, and fumadocs-mdx's
+// own pipeline parses it separately. Replaced with blank lines (not
+// removed) so any reported error line number still matches the file on
+// disk.
+function stripFrontmatter(src) {
+  if (!src.startsWith("---\n")) return src
+  const end = src.indexOf("\n---\n", 4)
+  if (end === -1) return src
+  const linesConsumed = src.slice(0, end + 5).split("\n").length - 1
+  return "\n".repeat(linesConsumed) + src.slice(end + 5)
+}
+
+// Must match the `layer` enum in source.config.ts.
+const LAYERS = [
+  "process",
+  "primitives",
+  "identity",
+  "memory",
+  "coordination",
+  "capabilities",
+  "drivers",
+  "surfaces",
+]
+
+// fumadocs-mdx parses the frontmatter as YAML and validates it against
+// source.config.ts; both failures otherwise surface as a Turbopack error.
+function frontmatterProblem(src) {
+  if (!src.startsWith("---\n")) return null
+  const end = src.indexOf("\n---\n", 4)
+  if (end === -1) return null
+  try {
+    const data = YAML.parse(src.slice(4, end))
+    if (data?.layer !== undefined && !LAYERS.includes(data.layer)) {
+      return `layer "${data.layer}" is not one of ${LAYERS.join("|")}`
+    }
+  } catch (err) {
+    return err.message.split("\n")[0]
+  }
+  return null
+}
+
+async function findMdxFiles(dir) {
+  const out = []
+  for (const entry of await readdir(dir, { withFileTypes: true })) {
+    if (entry.name === "resources") continue
+    const full = path.join(dir, entry.name)
+    if (entry.isDirectory()) {
+      out.push(...(await findMdxFiles(full)))
+    } else if (entry.name.endsWith(".mdx")) {
+      out.push(full)
+    }
+  }
+  return out
+}
+
+// Catch a broken spec BEFORE `next build` ever sees it. A malformed .mdx
+// (an unclosed inline code span wrapping a `{`, a stray JSX-looking
+// `<tag>`) fails deep inside fumadocs-mdx/Turbopack with a stack trace
+// that names an internal loader file, not the offending spec — this
+// turns that into a flat "file:line" list while the content is still
+// sitting right here, synced but not yet committed to a build.
+async function validateContent() {
+  const files = await findMdxFiles(TARGET_DIR)
+  const failures = []
+  for (const file of files) {
+    const raw = await readFile(file, "utf8")
+    const rel = path.relative(TARGET_DIR, file)
+    const problem = frontmatterProblem(raw)
+    if (problem) failures.push(`  ${rel} (frontmatter): ${problem}`)
+    try {
+      await compile(stripFrontmatter(raw), { format: "mdx" })
+    } catch (err) {
+      const at = err.place ? ` @ line ${err.place.line ?? "?"}` : ""
+      failures.push(`  ${rel}${at}: ${err.message}`)
+    }
+  }
+  if (failures.length > 0) {
+    throw new Error(
+      `[sync-content] ${failures.length} synced .mdx file(s) fail to compile:\n${failures.join("\n")}`
+    )
+  }
+}
+
 async function main() {
   if (await isDir(SIBLING_SPECS)) {
     await syncFromSibling()
   } else {
     await syncFromGit()
   }
+  await validateContent()
   console.log(`[sync-content] done — content at ${TARGET_DIR}`)
 }
 
