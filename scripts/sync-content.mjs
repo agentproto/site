@@ -27,6 +27,7 @@ import { execFileSync } from "node:child_process"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { compile } from "@mdx-js/mdx"
+import YAML from "yaml"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, "..")
@@ -102,6 +103,35 @@ function stripFrontmatter(src) {
   return "\n".repeat(linesConsumed) + src.slice(end + 5)
 }
 
+// Must match the `layer` enum in source.config.ts.
+const LAYERS = [
+  "process",
+  "primitives",
+  "identity",
+  "memory",
+  "coordination",
+  "capabilities",
+  "drivers",
+  "surfaces",
+]
+
+// fumadocs-mdx parses the frontmatter as YAML and validates it against
+// source.config.ts; both failures otherwise surface as a Turbopack error.
+function frontmatterProblem(src) {
+  if (!src.startsWith("---\n")) return null
+  const end = src.indexOf("\n---\n", 4)
+  if (end === -1) return null
+  try {
+    const data = YAML.parse(src.slice(4, end))
+    if (data?.layer !== undefined && !LAYERS.includes(data.layer)) {
+      return `layer "${data.layer}" is not one of ${LAYERS.join("|")}`
+    }
+  } catch (err) {
+    return err.message.split("\n")[0]
+  }
+  return null
+}
+
 async function findMdxFiles(dir) {
   const out = []
   for (const entry of await readdir(dir, { withFileTypes: true })) {
@@ -126,11 +156,13 @@ async function validateContent() {
   const files = await findMdxFiles(TARGET_DIR)
   const failures = []
   for (const file of files) {
-    const src = stripFrontmatter(await readFile(file, "utf8"))
+    const raw = await readFile(file, "utf8")
+    const rel = path.relative(TARGET_DIR, file)
+    const problem = frontmatterProblem(raw)
+    if (problem) failures.push(`  ${rel} (frontmatter): ${problem}`)
     try {
-      await compile(src, { format: "mdx" })
+      await compile(stripFrontmatter(raw), { format: "mdx" })
     } catch (err) {
-      const rel = path.relative(TARGET_DIR, file)
       const at = err.place ? ` @ line ${err.place.line ?? "?"}` : ""
       failures.push(`  ${rel}${at}: ${err.message}`)
     }
