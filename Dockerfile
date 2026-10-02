@@ -25,14 +25,13 @@ RUN apk add --no-cache git python3 make g++ libc6-compat
 # keyid mismatch — same binary, no signature dance.
 RUN npm install -g pnpm@10.4.1
 
-# Layer-cache the dep install — copy only the manifest first. The
-# site has no committed lockfile because it's also a member of the
-# private agentik-studio monorepo (which holds the canonical lockfile
-# during local dev). Production rebuilds resolve from package.json
-# version ranges. Generate + commit a `pnpm-lock.yaml` here later for
-# strict reproducibility once the OSS surface stabilises.
-COPY package.json pnpm-lock.yaml* ./
-RUN pnpm install --no-frozen-lockfile
+# Layer-cache the dep install — copy only the manifest first. A
+# standalone pnpm-lock.yaml is committed (sites-fix, 2026-10-02) so
+# this resolves to pinned versions, not floating package.json ranges —
+# an unpinned transitive dependency release is what broke this build
+# in the first place.
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
 # Now bring in the rest and run the full build (sync-content + next build).
 COPY . .
